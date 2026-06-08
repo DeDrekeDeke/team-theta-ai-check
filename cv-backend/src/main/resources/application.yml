@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: cv-manager-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cvmanager}
+    username: ${SPRING_DATASOURCE_USERNAME:cvmanager}
+    password: ${SPRING_DATASOURCE_PASSWORD:cvmanager}
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  as-is:
+    demo-token-prefix: demo-token
+  admin:
+    email: admin@example.com
+    password: admin123
+  cv:
+    upload-dir: uploads

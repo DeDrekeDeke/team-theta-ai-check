@@ -1,0 +1,21 @@
+import { apiRequest } from '../../app/apiClient';
+
+export type LoginRequest = {
+  email: string;
+  password: string;
+};
+
+export type LoginResponse = {
+  userId: number;
+  email: string;
+  displayName: string;
+  admin: boolean;
+  token: string;
+};
+
+export function login(request: LoginRequest) {
+  return apiRequest<LoginResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(request)
+  });
+}
