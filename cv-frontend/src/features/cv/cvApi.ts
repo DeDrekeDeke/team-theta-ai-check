@@ -51,12 +51,13 @@ export function uploadCv(formData: FormData) {
 export type CvUpdateRequest = {
   title: string;
   uploadedHtmlFilePath: string;
-}
+};
 
 export function updateCv(id: number | string, request: CvUpdateRequest) {
   return apiRequest<Cv>(`/api/cvs/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(request)});
+    method: 'PUT',
+    body: JSON.stringify(request)
+  });
 }
 
 export function archiveCv(id: number | string) {
