@@ -31,6 +31,12 @@ public class UserController {
         this.userService = userService;
     }
 
+    /**
+     * Lists all user accounts for an admin caller.
+     *
+     * @param authorizationHeader bearer token used to verify admin access
+     * @return user summaries without password data
+     */
     @GetMapping
     public List<UserResponse> listUsers(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
@@ -38,6 +44,13 @@ public class UserController {
         return userService.listUsers();
     }
 
+    /**
+     * Creates a regular user account from validated input.
+     *
+     * @param authorizationHeader bearer token used to verify admin access
+     * @param request email, display name, and raw password for the new user
+     * @return the created user summary without password data
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(
@@ -47,6 +60,13 @@ public class UserController {
         return userService.createUser(request);
     }
 
+    /**
+     * Returns one user account by database id for an admin caller.
+     *
+     * @param authorizationHeader bearer token used to verify admin access
+     * @param id user id from the request path
+     * @return user summary without password data
+     */
     @GetMapping("/{id}")
     public UserResponse getUser(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader,
@@ -55,6 +75,14 @@ public class UserController {
         return userService.getUser(id);
     }
 
+    /**
+     * Updates editable user account fields, including the admin flag.
+     *
+     * @param authorizationHeader bearer token used to verify admin access
+     * @param id user id from the request path
+     * @param request email, display name, and admin-role state to store
+     * @return updated user summary without password data
+     */
     @PutMapping("/{id}")
     public UserResponse updateUser(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader,

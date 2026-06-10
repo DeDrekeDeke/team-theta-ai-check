@@ -25,6 +25,11 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Loads all users ordered by id.
+     *
+     * @return user summaries without password hashes
+     */
     @Transactional(readOnly = true)
     public List<UserResponse> listUsers() {
         return userRepository.findAll(Sort.by("id")).stream()
@@ -32,6 +37,12 @@ public class UserService {
                 .toList();
     }
 
+    /**
+     * Creates a regular user account after normalizing the email and hashing the submitted password.
+     *
+     * @param request validated email, display name, and raw password for the new user
+     * @return created user summary without password data
+     */
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
         String email = normalizeEmail(request.email());
@@ -46,6 +57,12 @@ public class UserService {
         return toResponse(userRepository.save(user));
     }
 
+    /**
+     * Loads one user by database id.
+     *
+     * @param id user id to look up
+     * @return user summary without password data
+     */
     @Transactional(readOnly = true)
     public UserResponse getUser(Long id) {
         return userRepository.findById(id)
@@ -53,6 +70,13 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User not found", "USER_NOT_FOUND"));
     }
 
+    /**
+     * Updates editable fields on an existing user account.
+     *
+     * @param id user id to update
+     * @param request validated email, display name, and admin-role state to store
+     * @return updated user summary without password data
+     */
     @Transactional
     public UserResponse updateUser(Long id, UserUpdateRequest request) {
         UserAccount user = userRepository.findById(id)
