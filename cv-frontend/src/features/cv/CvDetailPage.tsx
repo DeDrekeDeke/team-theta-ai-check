@@ -6,6 +6,7 @@ import { FormField, TextInput } from '../../components/FormField';
 import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
 import { AiActionPanel } from '../ai/AiActionPanel';
+import { getCurrentUser } from '../auth/authStore';
 import { archiveCv, Cv, getCv, getCvHtml, getCvHtmlUrl, updateCv } from './cvApi';
 
 export function CvDetailPage() {
@@ -23,8 +24,19 @@ export function CvDetailPage() {
       return;
     }
 
-    Promise.all([getCv(id), getCvHtml(id)])
-      .then(([loadedCv, loadedHtml]) => {
+    getCv(id)
+      .then(async (loadedCv) => {
+        const user = getCurrentUser();
+
+        if (!user) {
+          throw new Error('Log in to view this CV');
+        }
+
+        if (!user.admin && loadedCv.ownerUserId !== user.userId) {
+          throw new Error('You can only view your own CVs');
+        }
+
+        const loadedHtml = await getCvHtml(id);
         setCv(loadedCv);
         setTitle(loadedCv.title);
         setHtml(loadedHtml);
