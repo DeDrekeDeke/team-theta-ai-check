@@ -1,17 +1,5 @@
 package com.example.cvmanager.cv.service;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.cv.dto.CvCreateRequest;
 import com.example.cvmanager.cv.dto.CvResponse;
@@ -20,31 +8,55 @@ import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.List;
 
-@Service
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+@Service @RequiredArgsConstructor
 public class CvService {
 
     private final CvRepository cvRepository;
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
+    private final EntityManager entityManager;
     private final CvStorageProperties storageProperties;
 
-    public CvService(
-            CvRepository cvRepository,
-            UserRepository userRepository,
-            CvMapper cvMapper,
-            CvStorageProperties storageProperties) {
-        this.cvRepository = cvRepository;
-        this.userRepository = userRepository;
-        this.cvMapper = cvMapper;
-        this.storageProperties = storageProperties;
-    }
+//    public CvService(
+//            CvRepository cvRepository,
+//            UserRepository userRepository,
+//            CvMapper cvMapper,
+//            EntityManager entityManager,
+//            CvStorageProperties storageProperties) {
+//        this.cvRepository = cvRepository;
+//        this.userRepository = userRepository;
+//        this.cvMapper = cvMapper;
+//        this.entityManager = entityManager;
+//        this.storageProperties = storageProperties;
+//    }
 
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs() {
-        return cvRepository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt")).stream()
+        return cvRepository.findByArchivedAtIsNull(updatedAtDescending()).stream() // TODO add sorting by update time
                 .map(cvMapper::toResponse)
                 .toList();
+    }
+
+    @Transactional
+    public void archiveCv(Long id) {
+        Cv cv = findCv(id);
+        cv.archive();
+        cvRepository.save(cv);
     }
 
     @Transactional(readOnly = true)
@@ -176,12 +188,16 @@ public class CvService {
 
     @Transactional(readOnly = true)
     public Cv findCv(Long id) {
-        return cvRepository.findById(id)
+        return cvRepository.findByIdAndArchivedAtIsNull(id)
                 .orElseThrow(() -> new NotFoundException("CV not found", "CV_NOT_FOUND"));
     }
 
     private String normalizeLegacyText(String value) {
         return value.replace("\r\n", "\n").replace("\r", "\n").trim();
+    }
+
+    private Sort updatedAtDescending() {
+        return Sort.by(Sort.Direction.DESC, "updatedAt");
     }
 
     private String removeLegacyHeader(String value) {
