@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { App } from './App';
+import { ProtectedRoute } from '../features/auth/components/ProtectedRoute';
 import { LoginPage } from '../features/auth/LoginPage';
 import { CvDetailPage } from '../features/cv/CvDetailPage';
 import { CvListPage } from '../features/cv/CvListPage';
@@ -16,8 +17,22 @@ export const router = createBrowserRouter([
       { path: 'login', element: <LoginPage /> },
       { path: 'upload', element: <CvUploadPage /> },
       { path: 'cvs/:id', element: <CvDetailPage /> },
-      { path: 'admin/users', element: <UsersPage /> },
-      { path: 'admin/settings', element: <SettingsPage /> }
+      {
+        path: 'admin/users',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <UsersPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'admin/settings',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <SettingsPage />
+          </ProtectedRoute>
+        )
+      }
     ]
   }
 ]);
