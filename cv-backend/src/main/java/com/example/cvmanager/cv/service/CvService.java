@@ -1,5 +1,17 @@
 package com.example.cvmanager.cv.service;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.cv.dto.CvCreateRequest;
 import com.example.cvmanager.cv.dto.CvResponse;
@@ -8,18 +20,6 @@ import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.repository.UserRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.List;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class CvService {
@@ -27,19 +27,16 @@ public class CvService {
     private final CvRepository cvRepository;
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
-    private final EntityManager entityManager;
     private final CvStorageProperties storageProperties;
 
     public CvService(
             CvRepository cvRepository,
             UserRepository userRepository,
             CvMapper cvMapper,
-            EntityManager entityManager,
             CvStorageProperties storageProperties) {
         this.cvRepository = cvRepository;
         this.userRepository = userRepository;
         this.cvMapper = cvMapper;
-        this.entityManager = entityManager;
         this.storageProperties = storageProperties;
     }
 
@@ -61,17 +58,7 @@ public class CvService {
             return listCvs();
         }
 
-        String sql = "select c.* from cv c "
-                + "join user_account u on u.id = c.owner_user_id "
-                + "where lower(c.title) like lower('%" + q + "%') "
-                + "or lower(u.email) like lower('%" + q + "%') "
-                + "or lower(c.uploaded_html_file_path) like lower('%" + q + "%') "
-                + "order by c.updated_at desc";
-
-        Query query = entityManager.createNativeQuery(sql, Cv.class);
-        @SuppressWarnings("unchecked")
-        List<Cv> cvs = query.getResultList();
-        return cvs.stream()
+        return cvRepository.search(q.trim()).stream()
                 .map(cvMapper::toResponse)
                 .toList();
     }
