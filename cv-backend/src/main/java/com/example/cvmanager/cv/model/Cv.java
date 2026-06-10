@@ -19,7 +19,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "cv") @Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "cv")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Cv {
 
     @Id
@@ -45,6 +47,9 @@ public class Cv {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+
     public Cv(UserAccount owner, String title, String uploadedHtmlFilePath) {
         this.owner = owner;
         this.title = title;
@@ -65,5 +70,17 @@ public class Cv {
     @PreUpdate
     void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void archive() {
+        archivedAt = LocalDateTime.now();
+    }
+
+    public void restore() {
+        archivedAt = null;
+    }
+
+    public boolean isArchived() {
+        return archivedAt != null;
     }
 }
