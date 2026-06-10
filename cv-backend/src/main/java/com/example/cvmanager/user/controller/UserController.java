@@ -76,11 +76,11 @@ public class UserController {
     }
 
     /**
-     * Updates editable user account fields, including the admin flag.
+     * Updates editable user account fields, including the admin flag and optional password.
      *
      * @param authorizationHeader bearer token used to verify admin access
      * @param id user id from the request path
-     * @param request email, display name, and admin-role state to store
+     * @param request email, display name, optional raw password, and admin-role state to store
      * @return updated user summary without password data
      */
     @PutMapping("/{id}")

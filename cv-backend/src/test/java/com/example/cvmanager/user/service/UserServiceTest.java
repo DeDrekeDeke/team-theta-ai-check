@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class UserServiceTest {
 
@@ -60,5 +61,31 @@ class UserServiceTest {
         assertThrows(
                 BadRequestException.class,
                 () -> userService.createUser(new UserCreateRequest("Alice@Example.com", "Alice Student", "user123")));
+    }
+
+    @Test
+    void updateUserHashesNewPasswordWhenProvided() {
+        UserAccount user = new UserAccount(
+                "alice@example.com",
+                "Alice Student",
+                passwordEncoder.encode("old-password"),
+                false);
+        ReflectionTestUtils.setField(user, "id", 2L);
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailIgnoreCase("alice.updated@example.com")).thenReturn(Optional.empty());
+        ArgumentCaptor<UserAccount> userCaptor = ArgumentCaptor.forClass(UserAccount.class);
+        when(userRepository.save(userCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = userService.updateUser(2L, new com.example.cvmanager.user.dto.UserUpdateRequest(
+                "Alice.Updated@example.com",
+                "Alice Updated",
+                "new-password",
+                false));
+
+        assertEquals("alice.updated@example.com", response.email());
+        assertEquals("Alice Updated", response.displayName());
+        assertNotEquals("new-password", userCaptor.getValue().getPassword());
+        assertTrue(passwordEncoder.matches("new-password", userCaptor.getValue().getPassword()));
     }
 }

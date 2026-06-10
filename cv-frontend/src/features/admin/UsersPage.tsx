@@ -13,12 +13,21 @@ const emptyForm = {
   password: ''
 };
 
+const emptyEditForm = {
+  email: '',
+  displayName: '',
+  password: '',
+  admin: false
+};
+
 export function UsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [editForm, setEditForm] = useState(emptyEditForm);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [savingId, setSavingId] = useState<number | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
@@ -52,23 +61,57 @@ export function UsersPage() {
     }
   }
 
-  async function handleRoleChange(user: AdminUser) {
+  function openEditModal(user: AdminUser) {
     setError('');
     setNotice('');
-    setSavingId(user.id);
+    setEditingUser(user);
+    setEditForm({
+      email: user.email,
+      displayName: user.displayName,
+      password: '',
+      admin: user.admin
+    });
+  }
 
+  function closeEditModal() {
+    if (savingEdit) {
+      return;
+    }
+
+    setEditingUser(null);
+    setEditForm(emptyEditForm);
+  }
+
+  async function handleEditSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingUser) {
+      return;
+    }
+
+    setError('');
+    setNotice('');
+
+    if (editForm.password && editForm.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+
+    setSavingEdit(true);
     try {
-      const updated = await updateUser(user.id, {
-        email: user.email,
-        displayName: user.displayName,
-        admin: !user.admin
+      const updated = await updateUser(editingUser.id, {
+        email: editForm.email,
+        displayName: editForm.displayName,
+        password: editForm.password || undefined,
+        admin: editForm.admin
       });
       setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-      setNotice(`${updated.email} is now ${updated.admin ? 'an admin' : 'a regular user'}.`);
+      setNotice(`${updated.email} was updated.`);
+      setEditingUser(null);
+      setEditForm(emptyEditForm);
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'Could not update user');
     } finally {
-      setSavingId(null);
+      setSavingEdit(false);
     }
   }
 
@@ -142,14 +185,11 @@ export function UsersPage() {
                   </td>
                   <td>{formatDateTime(user.createdAt)}</td>
                   <td>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={savingId === user.id}
-                      onClick={() => handleRoleChange(user)}
-                    >
-                      {user.admin ? 'Make user' : 'Make admin'}
-                    </Button>
+                    <div className="row-actions">
+                      <Button type="button" variant="secondary" onClick={() => openEditModal(user)}>
+                        Edit
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -157,6 +197,66 @@ export function UsersPage() {
           </table>
         </div>
       )}
+
+      {editingUser ? (
+        <div className="modal-backdrop" role="presentation" onClick={closeEditModal}>
+          <div
+            className="modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-user-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <form className="form-stack" onSubmit={handleEditSubmit}>
+              <div className="panel-header">
+                <h3 id="edit-user-title">Edit user</h3>
+              </div>
+              <FormField label="Email" htmlFor="edit-user-email">
+                <TextInput
+                  id="edit-user-email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(event) => setEditForm((current) => ({ ...current, email: event.target.value }))}
+                  required
+                />
+              </FormField>
+              <FormField label="Display name" htmlFor="edit-user-display-name">
+                <TextInput
+                  id="edit-user-display-name"
+                  value={editForm.displayName}
+                  onChange={(event) => setEditForm((current) => ({ ...current, displayName: event.target.value }))}
+                  required
+                />
+              </FormField>
+              <FormField label="New password" htmlFor="edit-user-password">
+                <TextInput
+                  id="edit-user-password"
+                  type="password"
+                  value={editForm.password}
+                  onChange={(event) => setEditForm((current) => ({ ...current, password: event.target.value }))}
+                  minLength={8}
+                />
+              </FormField>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={editForm.admin}
+                  onChange={(event) => setEditForm((current) => ({ ...current, admin: event.target.checked }))}
+                />
+                <span>Admin</span>
+              </label>
+              <div className="inline-actions end">
+                <Button type="button" variant="secondary" disabled={savingEdit} onClick={closeEditModal}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={savingEdit}>
+                  {savingEdit ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

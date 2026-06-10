@@ -71,10 +71,10 @@ public class UserService {
     }
 
     /**
-     * Updates editable fields on an existing user account.
+     * Updates editable fields on an existing user account and hashes a new password when one is provided.
      *
      * @param id user id to update
-     * @param request validated email, display name, and admin-role state to store
+     * @param request validated email, display name, optional raw password, and admin-role state to store
      * @return updated user summary without password data
      */
     @Transactional
@@ -88,6 +88,9 @@ public class UserService {
 
         user.setEmail(email);
         user.setDisplayName(request.displayName().trim());
+        if (request.password() != null) {
+            user.setPassword(passwordEncoder.encode(request.password()));
+        }
         user.setAdmin(request.admin());
         return toResponse(userRepository.save(user));
     }

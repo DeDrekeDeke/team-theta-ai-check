@@ -23,6 +23,7 @@ export type UserCreateRequest = {
 export type UserUpdateRequest = {
   email: string;
   displayName: string;
+  password?: string;
   admin: boolean;
 };
 
