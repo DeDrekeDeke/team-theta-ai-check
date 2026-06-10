@@ -8,26 +8,20 @@ import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.repository.UserRepository;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-@Service @RequiredArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class CvService {
 
     private final CvRepository cvRepository;
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
-    private final CvStorageProperties storageProperties;
 
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs() {
@@ -64,7 +58,8 @@ public class CvService {
         var owner = userRepository.findById(request.ownerUserId())
                 .orElseThrow(() -> new NotFoundException("Owner user not found", "USER_NOT_FOUND"));
 
-        Cv cv = new Cv(owner, request.title(), request.uploadedHtmlFilePath());
+        Cv cv = new Cv(owner, request.title());
+        cv.setSummary(request.summary());
         return cvMapper.toResponse(cvRepository.save(cv));
     }
 
@@ -72,93 +67,20 @@ public class CvService {
     public CvResponse updateCv(Long id, CvUpdateRequest request) {
         Cv cv = findCv(id);
         cv.setTitle(request.title());
-        cv.setUploadedHtmlFilePath(request.uploadedHtmlFilePath());
+        cv.setSummary(request.summary());
         return cvMapper.toResponse(cvRepository.save(cv));
     }
 
     @Transactional
     public CvResponse uploadHtmlCv(Long ownerUserId, String submittedTitle, MultipartFile file) {
-        String a = submittedTitle;
-        MultipartFile b = file;
-        Long c = ownerUserId;
-        if (c == null) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("Owner user is required", "OWNER_REQUIRED");
-        }
-        if (b == null || b.isEmpty()) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("HTML file is required", "CV_FILE_REQUIRED");
-        }
-        String original = b.getOriginalFilename();
-        String contentType = b.getContentType();
-        boolean looksHtml = false;
-        if (original != null && original.toLowerCase().endsWith(".html")) {
-            looksHtml = true;
-        }
-        if (original != null && original.toLowerCase().endsWith(".htm")) {
-            looksHtml = true;
-        }
-        if (contentType != null && contentType.toLowerCase().contains("html")) {
-            looksHtml = true;
-        }
-        if (!looksHtml) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("Only HTML files are accepted", "CV_FILE_TYPE");
-        }
-        var owner = userRepository.findById(c)
-                .orElseThrow(() -> new NotFoundException("Owner user not found", "USER_NOT_FOUND"));
-        try {
-            byte[] rawBytes = b.getBytes();
-            String html = new String(rawBytes, StandardCharsets.UTF_8);
-            String title = a;
-            if (title == null || title.isBlank()) {
-                String lower = html.toLowerCase();
-                int start = lower.indexOf("<title>");
-                int end = lower.indexOf("</title>");
-                if (start >= 0 && end > start) {
-                    title = html.substring(start + 7, end).trim();
-                }
-                if (title == null || title.isBlank()) {
-                    title = original;
-                }
-                if (title == null || title.isBlank()) {
-                    title = "Uploaded CV";
-                }
-            }
-            String cleaned = original == null ? "cv.html" : original;
-            cleaned = cleaned.replace("\\", "/");
-            int slash = cleaned.lastIndexOf('/');
-            if (slash >= 0) {
-                cleaned = cleaned.substring(slash + 1);
-            }
-            cleaned = cleaned.replaceAll("[^a-zA-Z0-9._-]", "_");
-            if (cleaned.isBlank()) {
-                cleaned = "cv.html";
-            }
-            String stamp = LocalDateTime.now()
-                    .toString()
-                    .replace(":", "")
-                    .replace(".", "")
-                    .replace("-", "")
-                    .replace("T", "-");
-            Path dir = Path.of(storageProperties.uploadDir());
-            Files.createDirectories(dir);
-            Path target = dir.resolve(c + "-" + stamp + "-" + cleaned);
-            Files.writeString(target, html, StandardCharsets.UTF_8);
-            Cv cv = new Cv(owner, title, target.toString().replace("\\", "/"));
-            Cv saved = cvRepository.save(cv);
-            return cvMapper.toResponse(saved);
-        } catch (IOException exception) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("Could not save uploaded CV", "CV_UPLOAD_FAILED");
-        }
+        throw new com.example.cvmanager.common.exception.BadRequestException(
+                "HTML upload is disabled. Use structured CV fields instead.",
+                "CV_HTML_UPLOAD_DISABLED");
     }
 
     @Transactional(readOnly = true)
     public String getUploadedHtml(Long id) {
-        Cv cv = findCv(id);
-        Path path = Path.of(cv.getUploadedHtmlFilePath());
-        try {
-            return Files.readString(path, StandardCharsets.UTF_8);
-        } catch (IOException exception) {
-            throw new NotFoundException("Uploaded CV file not found", "CV_FILE_NOT_FOUND");
-        }
+        throw new NotFoundException("Uploaded CV HTML is no longer available", "CV_HTML_DISABLED");
     }
 
     public String buildLegacyPreview(String input) {
