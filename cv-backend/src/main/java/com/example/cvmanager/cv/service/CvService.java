@@ -8,8 +8,6 @@ import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.repository.UserRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -29,12 +27,11 @@ public class CvService {
     private final CvRepository cvRepository;
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
-    private final EntityManager entityManager;
     private final CvStorageProperties storageProperties;
 
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs() {
-        return cvRepository.findByArchivedAtIsNull(updatedAtDescending()).stream() // TODO add sorting by update time
+        return cvRepository.findByArchivedAtIsNull(updatedAtDescending()).stream()
                 .map(cvMapper::toResponse)
                 .toList();
     }
