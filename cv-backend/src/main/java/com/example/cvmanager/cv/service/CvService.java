@@ -1,5 +1,6 @@
 package com.example.cvmanager.cv.service;
 
+import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.cv.dto.CvCreateRequest;
 import com.example.cvmanager.cv.dto.CvResponse;
@@ -89,7 +90,10 @@ public class CvService {
         String withoutHeader = removeLegacyHeader(normalized);
         String name = guessLegacyName(withoutHeader);
         String body = convertLegacyLines(withoutHeader);
-        return "<html><body><h1>" + name + "</h1><div>" + body + "</div></body></html>";
+        // return "<html><body><h1>" + name + "</h1><div>" + body + "</div></body></html>";
+        throw new com.example.cvmanager.common.exception.BadRequestException(
+                "HTML upload is disabled. Use structured CV fields instead.",
+                "CV_HTML_UPLOAD_DISABLED");
     }
 
     @Transactional(readOnly = true)

@@ -61,6 +61,7 @@ public class CvController {
         return cvService.uploadHtmlCv(ownerUserId, title, file);
     }
 
+    // Disabled functionality
     @PostMapping(value = "/legacy-preview", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_HTML_VALUE)
     public String legacyPreview(@RequestBody String input) {
         return cvService.buildLegacyPreview(input);
