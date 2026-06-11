@@ -66,6 +66,12 @@ Content-Type: application/json
 }
 ```
 
+Use the returned `token` value as a bearer token for authenticated requests:
+
+```http
+Authorization: Bearer <access-token>
+```
+
 Logout:
 
 ```http
@@ -107,7 +113,7 @@ Admin user creation:
 
 ```http
 POST /api/users
-Authorization: Bearer demo-token-1
+Authorization: Bearer <admin-access-token>
 Content-Type: application/json
 
 {
@@ -146,3 +152,4 @@ SPRING_DATASOURCE_PASSWORD=cvmanager
 - `POST /api/auth/logout` returns `204 No Content` for an authenticated caller, but it does not revoke issued JWTs server-side.
 - Logout security relies on the frontend discarding its in-memory token and on access-token expiry.
 - This avoids long-lived browser persistence, but a full page reload requires the user to log in again because the frontend does not persist the token.
+- Set `APP_AUTH_SECRET` outside local development. The default secret is only for running the starter application locally.
