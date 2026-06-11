@@ -79,11 +79,25 @@ public class UserService {
      */
     @Transactional
     public UserResponse updateUser(Long id, UserUpdateRequest request) {
+        return updateUser(id, request, null);
+    }
+
+    /**
+     * Updates editable fields while preventing the current admin from removing their own admin access.
+     *
+     * @param id user id to update
+     * @param request validated email, display name, optional raw password, and admin-role state to store
+     * @param currentUserId authenticated admin user id, or null when no self-demotion check is needed
+     * @return updated user summary without password data
+     */
+    @Transactional
+    public UserResponse updateUser(Long id, UserUpdateRequest request, Long currentUserId) {
         UserAccount user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found", "USER_NOT_FOUND"));
 
         String email = normalizeEmail(request.email());
         ensureEmailAvailable(email, id);
+        ensureNotDemotingSelf(user, request.admin(), currentUserId);
         ensureAnAdminRemains(user, request.admin());
 
         user.setEmail(email);
@@ -106,6 +120,12 @@ public class UserService {
     private void ensureAnAdminRemains(UserAccount user, boolean requestedAdmin) {
         if (user.isAdmin() && !requestedAdmin && userRepository.countByAdminTrue() <= 1) {
             throw new BadRequestException("At least one admin user is required", "USER_LAST_ADMIN");
+        }
+    }
+
+    private void ensureNotDemotingSelf(UserAccount user, boolean requestedAdmin, Long currentUserId) {
+        if (currentUserId != null && user.getId().equals(currentUserId) && user.isAdmin() && !requestedAdmin) {
+            throw new BadRequestException("Admins cannot remove their own admin access", "USER_SELF_DEMOTION");
         }
     }
 

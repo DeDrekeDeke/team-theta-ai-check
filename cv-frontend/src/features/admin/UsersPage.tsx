@@ -5,6 +5,7 @@ import { FormField, TextInput } from '../../components/FormField';
 import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
 import { formatDateTime } from '../../lib/formatters';
+import { getCurrentUser } from '../auth/authStore';
 import { AdminUser, createUser, listUsers, updateUser } from './adminApi';
 
 const emptyForm = {
@@ -21,6 +22,7 @@ const emptyEditForm = {
 };
 
 export function UsersPage() {
+  const currentUser = getCurrentUser();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
@@ -30,6 +32,7 @@ export function UsersPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const editingOwnAccount = Boolean(editingUser && currentUser?.userId === editingUser.id);
 
   useEffect(() => {
     listUsers()
@@ -241,6 +244,7 @@ export function UsersPage() {
                 <input
                   type="checkbox"
                   checked={editForm.admin}
+                  disabled={editingOwnAccount}
                   onChange={(event) => setEditForm((current) => ({ ...current, admin: event.target.checked }))}
                 />
                 <span>Admin</span>

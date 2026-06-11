@@ -15,7 +15,6 @@ public record UserUpdateRequest(
         @Size(max = 100, message = "Display name must be 100 characters or fewer")
         String displayName,
 
-        @NotBlank(message = "Password is required")
         @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
         @Pattern(regexp = ".*\\S.*", message = "Password must contain at least one non-whitespace character")
         String password,

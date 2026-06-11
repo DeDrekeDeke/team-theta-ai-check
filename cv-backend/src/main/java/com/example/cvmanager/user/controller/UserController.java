@@ -4,6 +4,7 @@ import com.example.cvmanager.common.security.AdminAccessService;
 import com.example.cvmanager.user.dto.UserCreateRequest;
 import com.example.cvmanager.user.dto.UserResponse;
 import com.example.cvmanager.user.dto.UserUpdateRequest;
+import com.example.cvmanager.user.model.UserAccount;
 import com.example.cvmanager.user.service.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -88,7 +89,7 @@ public class UserController {
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader,
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateRequest request) {
-        adminAccessService.requireAdmin(authorizationHeader);
-        return userService.updateUser(id, request);
+        UserAccount currentAdmin = adminAccessService.requireAdmin(authorizationHeader);
+        return userService.updateUser(id, request, currentAdmin.getId());
     }
 }

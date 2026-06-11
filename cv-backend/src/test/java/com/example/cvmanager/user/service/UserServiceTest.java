@@ -19,6 +19,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.user.dto.UserCreateRequest;
+import com.example.cvmanager.user.dto.UserUpdateRequest;
 import com.example.cvmanager.user.model.UserAccount;
 import com.example.cvmanager.user.repository.UserRepository;
 
@@ -78,7 +79,7 @@ class UserServiceTest {
         ArgumentCaptor<UserAccount> userCaptor = ArgumentCaptor.forClass(UserAccount.class);
         when(userRepository.save(userCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var response = userService.updateUser(2L, new com.example.cvmanager.user.dto.UserUpdateRequest(
+        var response = userService.updateUser(2L, new UserUpdateRequest(
                 "Alice.Updated@example.com",
                 "Alice Updated",
                 "new-password",
@@ -88,5 +89,26 @@ class UserServiceTest {
         assertEquals("Alice Updated", response.displayName());
         assertNotEquals("new-password", userCaptor.getValue().getPassword());
         assertTrue(passwordEncoder.matches("new-password", userCaptor.getValue().getPassword()));
+    }
+
+    @Test
+    void updateUserRejectsSelfDemotionEvenWhenOtherAdminsExist() {
+        UserAccount admin = new UserAccount(
+                "admin@example.com",
+                "Admin User",
+                passwordEncoder.encode("admin123"),
+                true);
+        ReflectionTestUtils.setField(admin, "id", 1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(userRepository.findByEmailIgnoreCase("admin@example.com")).thenReturn(Optional.of(admin));
+
+        assertThrows(
+                BadRequestException.class,
+                () -> userService.updateUser(1L, new UserUpdateRequest(
+                        "admin@example.com",
+                        "Admin User",
+                        null,
+                        false), 1L));
     }
 }
