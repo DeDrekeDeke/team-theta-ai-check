@@ -27,11 +27,12 @@ public class AdminAccessService {
     }
 
     @Transactional(readOnly = true)
-    public void requireAdmin(String authorizationHeader) {
+    public UserAccount requireAdmin(String authorizationHeader) {
         UserAccount user = authenticate(authorizationHeader);
         if (!user.isAdmin() && !adminProperties.email().equalsIgnoreCase(user.getEmail())) {
             throw new ForbiddenException("Admin access is required", "ADMIN_REQUIRED");
         }
+        return user;
     }
 
     private UserAccount authenticate(String authorizationHeader) {
