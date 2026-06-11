@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { AUTH_CHANGED_EVENT, getCurrentUser } from './authStore';
+import { AUTH_CHANGED_EVENT, getCurrentUser } from '../authStore';
 
 type ProtectedRouteProps = PropsWithChildren<{
   requireAdmin?: boolean;
