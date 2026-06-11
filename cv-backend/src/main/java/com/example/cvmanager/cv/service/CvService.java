@@ -14,6 +14,7 @@ import com.example.cvmanager.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -89,14 +90,14 @@ public class CvService {
     }
 
     @Transactional
-    public CvResponse uploadHtmlCv(Long ownerUserId, String submittedTitle, MultipartFile file) {
+    public CvResponse uploadHtmlCv(AuthenticatedUser user, Long ownerUserId, String submittedTitle, MultipartFile file) {
         throw new com.example.cvmanager.common.exception.BadRequestException(
                 "HTML upload is disabled. Use structured CV fields instead.",
                 "CV_HTML_UPLOAD_DISABLED");
     }
 
     @Transactional(readOnly = true)
-    public String getUploadedHtml(Long id) {
+    public String getUploadedHtml(AuthenticatedUser user, Long id) {
         throw new NotFoundException("Uploaded CV HTML is no longer available", "CV_HTML_DISABLED");
     }
 
@@ -146,7 +147,7 @@ public class CvService {
         String loweredQuery = query.toLowerCase(Locale.ROOT);
         return containsIgnoreCase(cv.getTitle(), loweredQuery)
                 || containsIgnoreCase(cv.getOwner().getEmail(), loweredQuery)
-                || containsIgnoreCase(cv.getUploadedHtmlFilePath(), loweredQuery);
+                || containsIgnoreCase(cv.getSummary(), loweredQuery);
     }
 
     private boolean containsIgnoreCase(String value, String loweredQuery) {

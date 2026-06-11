@@ -9,10 +9,8 @@ import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.security.AdminAccessService;
 import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.repository.CvRepository;
-import com.example.cvmanager.user.model.UserAccount;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,20 +38,17 @@ class CvServiceTest {
     }
 
     @Test
-    void uploadHtmlCvRejectsNonPositiveOwnerId() {
+    void uploadHtmlCvIsDisabledForInvalidOwnerId() {
         BadRequestException exception = assertThrows(
                 BadRequestException.class,
                 () -> cvService.uploadHtmlCv(user, 0L, "CV", null));
 
-        assertEquals("OWNER_INVALID", exception.getCode());
+        assertEquals("CV_HTML_UPLOAD_DISABLED", exception.getCode());
         verifyNoInteractions(userRepository, cvRepository);
     }
 
     @Test
     void uploadHtmlCvIsDisabled() {
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(new UserAccount("alice@example.com", "Alice Student", "hash", false)));
-
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "alice-cv.html",
@@ -62,8 +57,7 @@ class CvServiceTest {
 
         BadRequestException exception = assertThrows(
                 BadRequestException.class,
-                () -> cvService.uploadHtmlCv(0L, "CV", file));
-                // () -> cvService.uploadHtmlCv(user, 1L, "Alice CV", file));
+                () -> cvService.uploadHtmlCv(user, 1L, "Alice CV", file));
 
         assertEquals("CV_HTML_UPLOAD_DISABLED", exception.getCode());
         verifyNoInteractions(userRepository, cvRepository);

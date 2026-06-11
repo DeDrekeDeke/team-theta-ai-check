@@ -49,7 +49,7 @@ public class CvController {
     // IMPORTANT: functionality no longer supported, methods preserved for documentation purposes.
     @GetMapping(value = "/{id}/html", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getCvHtml(
-            // @AuthenticationPrincipal AuthenticatedUser user,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id) {
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_HTML)
