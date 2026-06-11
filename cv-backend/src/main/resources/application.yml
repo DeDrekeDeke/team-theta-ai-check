@@ -26,5 +26,3 @@ app:
   admin:
     email: admin@example.com
     password: admin123
-  cv:
-    upload-dir: uploads

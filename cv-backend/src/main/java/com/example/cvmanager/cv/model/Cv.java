@@ -1,22 +1,13 @@
 package com.example.cvmanager.cv.model;
 
 import com.example.cvmanager.user.model.UserAccount;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDateTime;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 
 @Entity
 @Table(name = "cv")
@@ -37,9 +28,13 @@ public class Cv {
     @Setter
     private String title;
 
-    @Column(name = "uploaded_html_file_path", nullable = false, length = 500)
+//    @Column(name = "uploaded_html_file_path", nullable = false, length = 500)
+//    @Setter
+//    private String uploadedHtmlFilePath;
+
+    @Column(name = "summary", columnDefinition = "text")
     @Setter
-    private String uploadedHtmlFilePath;
+    private String summary;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -50,10 +45,38 @@ public class Cv {
     @Column(name = "archived_at")
     private LocalDateTime archivedAt;
 
-    public Cv(UserAccount owner, String title, String uploadedHtmlFilePath) {
+    @OneToOne(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private CvPersonalDetails personalDetails;
+
+    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CvEducationEntry> educationEntries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CvWorkExperienceEntry> workExperienceEntries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CvSkill> skills = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CvLanguage> languages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CvLink> links = new ArrayList<>();
+
+    public Cv(UserAccount owner, String title) {
         this.owner = owner;
         this.title = title;
-        this.uploadedHtmlFilePath = uploadedHtmlFilePath;
+        // this.uploadedHtmlFilePath = uploadedHtmlFilePath;
+    }
+
+    public void setPersonalDetails(CvPersonalDetails personalDetails) {
+        if (this.personalDetails != null) {
+            this.personalDetails.setCv(null);
+        }
+        this.personalDetails = personalDetails;
+        if (personalDetails != null) {
+            personalDetails.setCv(this);
+        }
     }
 
     @PrePersist
