@@ -79,8 +79,7 @@ public class CvService {
             return listCvs(user);
         }
 
-        return visibleCvs(user).stream()
-                .filter(cv -> matchesSearch(cv, q.trim()))
+        return searchVisibleCvs(user, q.trim()).stream()
                 .map(cvMapper::toResponse)
                 .toList();
     }
@@ -236,20 +235,14 @@ public class CvService {
         if (user.admin()) {
             return cvRepository.findByArchivedAtIsNull(updatedAtDescending());
         }
-        return cvRepository.findByOwnerId(user.userId()).stream()
-                .filter(cv -> !cv.isArchived())
-                .toList();
+        return cvRepository.findByOwnerIdAndArchivedAtIsNull(user.userId(), updatedAtDescending());
     }
 
-    private boolean matchesSearch(Cv cv, String query) {
-        String loweredQuery = query.toLowerCase(Locale.ROOT);
-        return containsIgnoreCase(cv.getTitle(), loweredQuery)
-                || containsIgnoreCase(cv.getOwner().getEmail(), loweredQuery)
-                || containsIgnoreCase(cv.getUploadedHtmlFilePath(), loweredQuery);
-    }
-
-    private boolean containsIgnoreCase(String value, String loweredQuery) {
-        return value != null && value.toLowerCase(Locale.ROOT).contains(loweredQuery);
+    private List<Cv> searchVisibleCvs(AuthenticatedUser user, String query) {
+        if (user.admin()) {
+            return cvRepository.search(query);
+        }
+        return cvRepository.searchByOwner(user.userId(), query);
     }
 
     private void rejectUnsafeHtml(String html) {

@@ -7,7 +7,6 @@ import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
 import { MAX_TITLE_LENGTH, validateRequiredTitle } from '../../lib/validation';
 import { AiActionPanel } from '../ai/AiActionPanel';
-import { getCurrentUser, isAdminUser } from '../auth/authStore';
 import { archiveCv, Cv, getCv, getCvHtml, updateCv } from './cvApi';
 
 export function CvDetailPage() {
@@ -29,16 +28,6 @@ export function CvDetailPage() {
 
     getCv(id)
       .then(async (loadedCv) => {
-        const user = getCurrentUser();
-
-        if (!user) {
-          throw new Error('Log in to view this CV');
-        }
-
-        if (!isAdminUser(user) && loadedCv.ownerUserId !== user.userId) {
-          throw new Error('You can only view your own CVs');
-        }
-
         const loadedHtml = await getCvHtml(id);
         setCv(loadedCv);
         setTitle(loadedCv.title);
