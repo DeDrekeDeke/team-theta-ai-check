@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
-<<<<<<< HEAD
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
-=======
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { AUTH_CHANGED_EVENT, getCurrentUser, isAdminUser, logout } from '../features/auth/authStore';
->>>>>>> dd5e38eb875017553478591173c3399509703e21
 import { logoutRequest } from '../features/auth/authApi';
 
 type NavItem = {
@@ -16,13 +11,8 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
   { to: '/upload', label: 'Upload' },
-<<<<<<< HEAD
   { to: '/admin/users', label: 'Users' },
   { to: '/admin/settings', label: 'Settings' }
-=======
-  { to: '/admin/users', label: 'Users', adminOnly: true },
-  { to: '/admin/settings', label: 'Settings', adminOnly: true }
->>>>>>> dd5e38eb875017553478591173c3399509703e21
 ];
 
 function isAdminRoute(path: string) {
@@ -33,14 +23,10 @@ export function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
-<<<<<<< HEAD
   const isLoginPage = location.pathname === '/login';
   const visibleNavItems = isLoginPage
     ? []
     : navItems.filter((item) => !isAdminRoute(item.to) || user?.admin);
-=======
-  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdminUser(user));
->>>>>>> dd5e38eb875017553478591173c3399509703e21
 
   useEffect(() => {
     function handleAuthChanged() {
