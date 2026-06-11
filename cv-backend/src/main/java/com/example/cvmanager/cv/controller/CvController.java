@@ -1,8 +1,8 @@
 package com.example.cvmanager.cv.controller;
 
-import com.example.cvmanager.cv.dto.CvCreateRequest;
-import com.example.cvmanager.cv.dto.CvResponse;
-import com.example.cvmanager.cv.dto.CvUpdateRequest;
+import com.example.cvmanager.cv.dto.request.CvCreateRequest;
+import com.example.cvmanager.cv.dto.response.CvResponse;
+import com.example.cvmanager.cv.dto.request.CvUpdateRequest;
 import com.example.cvmanager.cv.service.CvService;
 import jakarta.validation.Valid;
 import java.util.List;

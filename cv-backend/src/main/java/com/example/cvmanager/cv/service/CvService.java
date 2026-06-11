@@ -1,17 +1,16 @@
 package com.example.cvmanager.cv.service;
 
-import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.exception.NotFoundException;
-import com.example.cvmanager.cv.dto.CvCreateRequest;
-import com.example.cvmanager.cv.dto.CvResponse;
-import com.example.cvmanager.cv.dto.CvUpdateRequest;
+import com.example.cvmanager.cv.dto.request.CvCreateRequest;
+import com.example.cvmanager.cv.dto.response.CvResponse;
+import com.example.cvmanager.cv.dto.request.CvUpdateRequest;
 import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import java.util.Locale;
+
 import java.util.regex.Pattern;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
