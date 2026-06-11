@@ -18,12 +18,6 @@ export function improveWording(cvId: number, section: string, targetKey: string,
   });
 }
 
-export function improveSummary(cvId: number) {
-  return apiRequest<AiSuggestion>(`/api/cvs/${cvId}/ai-actions/improve-summary`, {
-    method: 'POST'
-  });
-}
-
 export function listSuggestions(cvId: number) {
   return apiRequest<AiSuggestion[]>(`/api/cvs/${cvId}/ai-actions/suggestions`);
 }

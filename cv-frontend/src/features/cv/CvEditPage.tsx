@@ -35,55 +35,38 @@ function workTargetKey(entry: CvWorkExperienceEntry, index: number) {
   return `workExperience:${entry.id ?? index}`;
 }
 
+function skillTargetKey(skill: CvSkill, index: number) {
+  return `skill:${skill.id ?? index}`;
+}
+
 function educationText(entry: CvEducationEntry) {
-  return compactText([
-    entry.institution,
-    entry.degree,
-    entry.fieldOfStudy,
-    compactText([entry.startDate, entry.endDate]),
-    entry.description
-  ]);
+  return entry.description ?? '';
 }
 
 function workExperienceText(entry: CvWorkExperienceEntry) {
-  return compactText([
-    entry.jobTitle,
-    entry.employer,
-    entry.location,
-    compactText([entry.startDate, entry.endDate]),
-    entry.description
-  ]);
+  return entry.description ?? '';
 }
 
-function skillsText(skills: CvSkill[]) {
-  return skills
-    .map((skill) => compactText([skill.name, skill.category, skill.proficiency]))
-    .filter(Boolean)
-    .join('\n');
+function skillText(skill: CvSkill) {
+  return compactText([skill.name, skill.category, skill.proficiency]);
 }
 
-function parseSkillSuggestion(suggestedText: string, currentSkills: CvSkill[]) {
-  const suggestedItems = suggestedText
-    .split(/\r?\n|,/)
-    .map((item) => item.replace(/^[-*]\s*/, '').trim())
-    .filter(Boolean);
+function parseSkillSuggestion(suggestedText: string, currentSkill: CvSkill) {
+  const cleanedSuggestion = suggestedText
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .find(Boolean);
 
-  if (suggestedItems.length === 0) {
-    return currentSkills;
+  if (!cleanedSuggestion) {
+    return currentSkill;
   }
 
-  return suggestedItems.map((item, index) => {
-    const fallback = currentSkills[index];
-    const parts = item.split(/\s*(?:\|| - | – | — )\s*/).filter(Boolean);
-
-    return {
-      ...fallback,
-      name: parts[0] ?? fallback?.name ?? item,
-      category: fallback?.category ?? null,
-      proficiency: parts.length > 1 ? parts.slice(1).join(' - ') : fallback?.proficiency ?? null,
-      displayOrder: fallback?.displayOrder ?? index
-    };
-  });
+  const parts = cleanedSuggestion.split(/\s*(?:\|| - | – | — )\s*/).filter(Boolean);
+  return {
+    ...currentSkill,
+    name: parts[0] ?? currentSkill.name,
+    proficiency: parts.length > 1 ? parts.slice(1).join(' - ') : currentSkill.proficiency
+  };
 }
 
 export function CvEditPage() {
@@ -184,10 +167,12 @@ export function CvEditPage() {
     }));
   }
 
-  function applySkillsSuggestion(suggestedText: string) {
+  function applySkillSuggestion(targetKey: string, suggestedText: string) {
     setStructuredCv((current) => ({
       ...current,
-      skills: parseSkillSuggestion(suggestedText, current.skills)
+      skills: current.skills.map((skill, index) => (
+        skillTargetKey(skill, index) === targetKey ? parseSkillSuggestion(suggestedText, skill) : skill
+      ))
     }));
   }
 
@@ -221,15 +206,16 @@ export function CvEditPage() {
     })
   ];
 
-  if (structuredCv.skills.length > 0) {
+  structuredCv.skills.forEach((skill, index) => {
+    const key = skillTargetKey(skill, index);
     aiSections.push({
-      key: 'skills',
+      key,
       section: 'skills',
-      label: 'Skills',
-      text: skillsText(structuredCv.skills),
-      onAccept: applySkillsSuggestion
+      label: `Skill: ${skill.name || `Entry ${index + 1}`}`,
+      text: skillText(skill),
+      onAccept: (suggestedText: string) => applySkillSuggestion(key, suggestedText)
     });
-  }
+  });
 
   return (
     <section className="page-section">

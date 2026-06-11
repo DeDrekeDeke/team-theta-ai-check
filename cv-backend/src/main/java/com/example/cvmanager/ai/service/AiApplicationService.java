@@ -62,6 +62,7 @@ public class AiApplicationService {
     public AiSuggestionResponse acceptSuggestion(AuthenticatedUser user, Long cvId, Long suggestionId) {
         cvService.findAuthorizedCv(user, cvId);
         AiSuggestion suggestion = findSuggestion(cvId, suggestionId);
+        requirePending(suggestion);
         suggestion.accept();
         return toResponse(aiSuggestionRepository.save(suggestion));
     }
@@ -70,6 +71,7 @@ public class AiApplicationService {
     public AiSuggestionResponse declineSuggestion(AuthenticatedUser user, Long cvId, Long suggestionId) {
         cvService.findAuthorizedCv(user, cvId);
         AiSuggestion suggestion = findSuggestion(cvId, suggestionId);
+        requirePending(suggestion);
         suggestion.decline();
         return toResponse(aiSuggestionRepository.save(suggestion));
     }
@@ -103,10 +105,13 @@ public class AiApplicationService {
     }
 
     private String normalizeTargetKey(String targetKey) {
-        if (targetKey == null || targetKey.isBlank()) {
-            return null;
-        }
         return targetKey.trim();
+    }
+
+    private void requirePending(AiSuggestion suggestion) {
+        if (!AiSuggestion.STATUS_PENDING.equals(suggestion.getStatus())) {
+            throw new BadRequestException("AI suggestion has already been reviewed", "AI_SUGGESTION_ALREADY_REVIEWED");
+        }
     }
 
     private AiActionType actionTypeForSection(String section) {

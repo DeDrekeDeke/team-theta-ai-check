@@ -114,12 +114,30 @@ export function AiActionPanel({ cvId, sections = [] }: AiActionPanelProps) {
     setError('');
     setNotice('');
     try {
-      const createdSuggestions: AiSuggestion[] = [];
-      for (const section of editableSections) {
-        createdSuggestions.push(await improveWording(cvId, section.section, section.key, section.text));
+      const suggestionResults = await Promise.allSettled(
+        editableSections.map((section) => improveWording(cvId, section.section, section.key, section.text))
+      );
+      const createdSuggestions = suggestionResults
+        .filter((result): result is PromiseFulfilledResult<AiSuggestion> => result.status === 'fulfilled')
+        .map((result) => result.value);
+      const failedSuggestions = suggestionResults.filter((result) => result.status === 'rejected');
+
+      if (createdSuggestions.length > 0) {
+        setSuggestions((current) => [...createdSuggestions, ...current]);
       }
-      setSuggestions((current) => [...createdSuggestions, ...current]);
-      setNotice('Review each topic suggestion before applying it.');
+
+      if (failedSuggestions.length > 0) {
+        const firstFailure = failedSuggestions[0] as PromiseRejectedResult;
+        setError(firstFailure.reason instanceof Error ? firstFailure.reason.message : 'Some AI suggestions failed');
+      }
+
+      if (createdSuggestions.length === 0) {
+        setNotice('');
+      } else if (failedSuggestions.length > 0) {
+        setNotice('Review the generated topic suggestions. Some topics could not be improved.');
+      } else {
+        setNotice('Review each topic suggestion before applying it.');
+      }
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'AI action failed');
     } finally {
