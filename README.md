@@ -26,7 +26,7 @@ The backend and frontend starter applications are scaffolded.
 1. Create a local environment file:
 
    ```bash
-   cp .env.example .env
+   cp .env .env
    ```
 
    On Windows PowerShell:
@@ -90,6 +90,10 @@ The backend runs at:
 http://localhost:8080
 ```
 
+AI wording suggestions run with a local mock by default. To use OpenAI instead,
+set `OPENAI_API_KEY` in your local `.env` or shell environment; keep real keys
+out of source control.
+
 ## Frontend
 
 Frontend code will live in `cv-frontend`.
@@ -139,6 +143,7 @@ GET  http://localhost:8080/api/users
 POST http://localhost:8080/api/users
 PUT  http://localhost:8080/api/users/1
 POST http://localhost:8080/api/cvs/1/ai-actions/improve-summary
+POST http://localhost:8080/api/cvs/1/ai-actions/improve-wording
 ```
 
 Integration note for CVM-008:

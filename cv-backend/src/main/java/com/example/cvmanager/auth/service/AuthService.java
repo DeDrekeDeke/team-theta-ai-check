@@ -4,6 +4,9 @@ import com.example.cvmanager.auth.dto.LoginRequest;
 import com.example.cvmanager.auth.dto.LoginResponse;
 import com.example.cvmanager.auth.security.JwtService;
 import com.example.cvmanager.common.exception.BadRequestException;
+import com.example.cvmanager.user.dto.UserCreateRequest;
+import com.example.cvmanager.user.model.UserAccount;
+import com.example.cvmanager.user.model.UserRole;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.Locale;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,6 +41,30 @@ public class AuthService {
         }
 
         String token = jwtService.createAccessToken(user);
+        return toLoginResponse(user, token);
+    }
+
+    @Transactional
+    public LoginResponse register(UserCreateRequest request) {
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
+
+        userRepository.findByEmailIgnoreCase(email).ifPresent(existing -> {
+            throw new BadRequestException("User with this email already exists", "USER_EMAIL_EXISTS");
+        });
+
+        UserAccount user = new UserAccount(
+                email,
+                request.displayName().trim(),
+                passwordEncoder.encode(request.password()),
+                false);
+        user.setRole(UserRole.USER);
+
+        UserAccount savedUser = userRepository.save(user);
+        String token = jwtService.createAccessToken(savedUser);
+        return toLoginResponse(savedUser, token);
+    }
+
+    private LoginResponse toLoginResponse(UserAccount user, String token) {
         return new LoginResponse(
                 user.getId(),
                 user.getEmail(),

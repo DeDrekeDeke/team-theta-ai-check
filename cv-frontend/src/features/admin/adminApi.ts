@@ -3,7 +3,13 @@ import { apiRequest } from '../../app/apiClient';
 export type AppSetting = {
   key: string;
   value: string;
+  valueType: 'STRING' | 'BOOLEAN';
+  label: string;
   description: string | null;
+};
+
+export type AppSettingUpdateRequest = {
+  value: string;
 };
 
 export type AdminUser = {
@@ -30,6 +36,13 @@ export type UserUpdateRequest = {
 
 export function listSettings() {
   return apiRequest<AppSetting[]>('/api/admin/settings');
+}
+
+export function updateSetting(key: string, request: AppSettingUpdateRequest) {
+  return apiRequest<AppSetting>(`/api/admin/settings/${encodeURIComponent(key)}`, {
+    method: 'PUT',
+    body: JSON.stringify(request)
+  });
 }
 
 export function listUsers() {

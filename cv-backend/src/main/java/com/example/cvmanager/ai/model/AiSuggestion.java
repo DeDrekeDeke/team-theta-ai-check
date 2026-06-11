@@ -19,6 +19,10 @@ import java.time.LocalDateTime;
 @Table(name = "ai_suggestion")
 public class AiSuggestion {
 
+    public static final String STATUS_PENDING = "PENDING";
+    public static final String STATUS_ACCEPTED = "ACCEPTED";
+    public static final String STATUS_DECLINED = "DECLINED";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,6 +34,9 @@ public class AiSuggestion {
     @Enumerated(EnumType.STRING)
     @Column(name = "action_type", nullable = false, length = 100)
     private AiActionType actionType;
+
+    @Column(name = "target_key", length = 100)
+    private String targetKey;
 
     @Column(name = "original_text", nullable = false, columnDefinition = "text")
     private String originalText;
@@ -46,9 +53,16 @@ public class AiSuggestion {
     protected AiSuggestion() {
     }
 
-    public AiSuggestion(Cv cv, AiActionType actionType, String originalText, String suggestedText, String status) {
+    public AiSuggestion(
+            Cv cv,
+            AiActionType actionType,
+            String targetKey,
+            String originalText,
+            String suggestedText,
+            String status) {
         this.cv = cv;
         this.actionType = actionType;
+        this.targetKey = targetKey;
         this.originalText = originalText;
         this.suggestedText = suggestedText;
         this.status = status;
@@ -73,6 +87,10 @@ public class AiSuggestion {
         return actionType;
     }
 
+    public String getTargetKey() {
+        return targetKey;
+    }
+
     public String getOriginalText() {
         return originalText;
     }
@@ -87,5 +105,13 @@ public class AiSuggestion {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void accept() {
+        status = STATUS_ACCEPTED;
+    }
+
+    public void decline() {
+        status = STATUS_DECLINED;
     }
 }

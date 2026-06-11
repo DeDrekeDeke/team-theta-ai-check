@@ -106,6 +106,12 @@ GET /api/admin/settings
 PUT /api/admin/settings/{key}
 ```
 
+Safe client configuration:
+
+```text
+GET /api/app-config
+```
+
 Admin/user endpoints:
 
 ```text
