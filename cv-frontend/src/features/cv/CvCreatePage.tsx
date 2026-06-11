@@ -4,37 +4,38 @@ import { Button } from '../../components/Button';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { FormField, TextInput } from '../../components/FormField';
 import { PageHeader } from '../../components/PageHeader';
-import {
-  compactErrors,
-  MAX_TITLE_LENGTH,
-  validateHtmlFile,
-  validateOptionalTitle,
-  validateOwnerUserId
-} from '../../lib/validation';
+import { compactErrors, MAX_TITLE_LENGTH, validateOwnerUserId, validateRequiredTitle } from '../../lib/validation';
 import { getCurrentUser } from '../auth/authStore';
+import { CvStructuredForm, emptyStructuredCvValue } from './components/CvStructuredForm';
 import { createCv } from './cvApi';
 
-export function CvUploadPage() {
+export function CvCreatePage() {
   const user = getCurrentUser();
   const navigate = useNavigate();
   const [ownerUserId, setOwnerUserId] = useState(user ? String(user.userId) : '');
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
+  const [structuredCv, setStructuredCv] = useState(emptyStructuredCvValue());
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const canChooseOwner = user?.admin ?? false;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const user = getCurrentUser();
+    const currentUser = getCurrentUser();
 
-    if (!user) {
+    if (!currentUser) {
       setError('Log in to create a CV.');
       return;
     }
 
-    if (!title.trim()) {
-      setError('Add a title first.');
+    const validationErrors = compactErrors([
+      validateRequiredTitle(title),
+      canChooseOwner ? validateOwnerUserId(ownerUserId) : ''
+    ]);
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join('\n'));
       return;
     }
 
@@ -42,9 +43,10 @@ export function CvUploadPage() {
     setError('');
     try {
       const cv = await createCv({
-        ownerUserId: user.userId,
+        ownerUserId: canChooseOwner ? Number(ownerUserId) : currentUser.userId,
         title,
-        summary
+        summary,
+        ...structuredCv
       });
       navigate(`/cvs/${cv.id}`);
     } catch (exception) {
@@ -55,12 +57,24 @@ export function CvUploadPage() {
   }
 
   return (
-    <section className="page-section narrow">
+    <section className="page-section">
       <PageHeader title="Create CV" description="Create a structured CV without uploading HTML." />
-      <form className="form-stack" onSubmit={handleSubmit}>
+      <form className="form-stack" onSubmit={handleSubmit} noValidate>
+        {canChooseOwner ? (
+          <FormField label="Owner user ID" htmlFor="owner-user-id">
+            <TextInput
+              id="owner-user-id"
+              inputMode="numeric"
+              value={ownerUserId}
+              onChange={(event) => setOwnerUserId(event.target.value)}
+            />
+          </FormField>
+        ) : null}
+
         <FormField label="Title" htmlFor="title">
           <TextInput
             id="title"
+            required
             maxLength={MAX_TITLE_LENGTH}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -76,10 +90,15 @@ export function CvUploadPage() {
             onChange={(event) => setSummary(event.target.value)}
           />
         </label>
+
+        <CvStructuredForm value={structuredCv} onChange={setStructuredCv} />
+
         {error ? <ErrorMessage message={error} /> : null}
-        <Button type="submit" disabled={loading || !title.trim()}>
-          {loading ? 'Creating...' : 'Create CV'}
-        </Button>
+        <div className="inline-actions end">
+          <Button type="submit" disabled={loading || !title.trim()}>
+            {loading ? 'Creating...' : 'Create CV'}
+          </Button>
+        </div>
       </form>
     </section>
   );
