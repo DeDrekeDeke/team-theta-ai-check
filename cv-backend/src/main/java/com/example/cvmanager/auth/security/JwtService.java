@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class JwtService {
 
     private static final String TOKEN_TYPE_CLAIM = "typ";
-    private static final String ADMIN_CLAIM = "admin";
+    private static final String ROLE_CLAIM = "role";
     private static final String DISPLAY_NAME_CLAIM = "displayName";
     private static final String EMAIL_CLAIM = "email";
     private static final String ACCESS_TOKEN_TYPE = "access";
@@ -30,7 +30,7 @@ public class JwtService {
         this.signingKey = Keys.hmacShaKeyFor(authProperties.secret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createAccessToken(UserAccount user, boolean admin) {
+    public String createAccessToken(UserAccount user) {
         Instant now = Instant.now();
         Instant expiresAt = now.plus(authProperties.accessTokenTtlMinutes(), ChronoUnit.MINUTES);
         return Jwts.builder()
@@ -41,7 +41,7 @@ public class JwtService {
                 .claim(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
                 .claim(EMAIL_CLAIM, user.getEmail())
                 .claim(DISPLAY_NAME_CLAIM, user.getDisplayName())
-                .claim(ADMIN_CLAIM, admin)
+                .claim(ROLE_CLAIM, user.getRole().name())
                 .signWith(signingKey)
                 .compact();
     }
@@ -52,7 +52,7 @@ public class JwtService {
                 Long.parseLong(claims.getSubject()),
                 claims.get(EMAIL_CLAIM, String.class),
                 claims.get(DISPLAY_NAME_CLAIM, String.class),
-                Boolean.TRUE.equals(claims.get(ADMIN_CLAIM, Boolean.class)));
+                claims.get(ROLE_CLAIM, String.class));
     }
 
     private Claims parseToken(String token, String expectedTokenType) {

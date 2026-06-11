@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
+import { AUTH_CHANGED_EVENT, getCurrentUser, isAdminUser, logout } from '../features/auth/authStore';
 import { logoutRequest } from '../features/auth/authApi';
 
 type NavItem = {
@@ -13,13 +13,13 @@ const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
   { to: '/upload', label: 'Upload' },
   { to: '/admin/users', label: 'Users', adminOnly: true },
-  { to: '/admin/settings', label: 'Settings' }
+  { to: '/admin/settings', label: 'Settings', adminOnly: true }
 ];
 
 export function App() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
-  const visibleNavItems = navItems.filter((item) => item.to !== '/admin/settings' || user?.admin);
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdminUser(user));
 
   useEffect(() => {
     function handleAuthChanged() {

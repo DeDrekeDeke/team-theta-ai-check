@@ -2,6 +2,8 @@ package com.example.cvmanager.user.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,8 +28,9 @@ public class UserAccount {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private boolean admin;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserRole role;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -39,13 +42,16 @@ public class UserAccount {
         this.email = email;
         this.displayName = displayName;
         this.password = password;
-        this.admin = admin;
+        this.role = admin ? UserRole.ADMIN : UserRole.USER;
     }
 
     @PrePersist
     void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (role == null) {
+            role = UserRole.USER;
         }
     }
 
@@ -78,11 +84,19 @@ public class UserAccount {
     }
 
     public boolean isAdmin() {
-        return admin;
+        return role == UserRole.ADMIN;
     }
 
     public void setAdmin(boolean admin) {
-        this.admin = admin;
+        this.role = admin ? UserRole.ADMIN : UserRole.USER;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 
     public LocalDateTime getCreatedAt() {

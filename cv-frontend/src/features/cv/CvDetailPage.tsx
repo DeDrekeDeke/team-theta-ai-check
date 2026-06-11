@@ -7,7 +7,7 @@ import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
 import { MAX_TITLE_LENGTH, validateRequiredTitle } from '../../lib/validation';
 import { AiActionPanel } from '../ai/AiActionPanel';
-import { getCurrentUser } from '../auth/authStore';
+import { getCurrentUser, isAdminUser } from '../auth/authStore';
 import { archiveCv, Cv, getCv, getCvHtml, updateCv } from './cvApi';
 
 export function CvDetailPage() {
@@ -35,7 +35,7 @@ export function CvDetailPage() {
           throw new Error('Log in to view this CV');
         }
 
-        if (!user.admin && loadedCv.ownerUserId !== user.userId) {
+        if (!isAdminUser(user) && loadedCv.ownerUserId !== user.userId) {
           throw new Error('You can only view your own CVs');
         }
 

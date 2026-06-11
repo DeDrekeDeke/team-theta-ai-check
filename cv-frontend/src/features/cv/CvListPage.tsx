@@ -4,7 +4,7 @@ import { Button } from '../../components/Button';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
-import { getCurrentUser } from '../auth/authStore';
+import { getCurrentUser, isAdminUser } from '../auth/authStore';
 import { CvTable } from './components/CvTable';
 import { Cv, listCvs, searchCvs } from './cvApi';
 
@@ -15,7 +15,7 @@ function filterCvsForCurrentUser(cvs: Cv[]) {
     return [];
   }
 
-  if (user.admin) {
+  if (isAdminUser(user)) {
     return cvs;
   }
 
