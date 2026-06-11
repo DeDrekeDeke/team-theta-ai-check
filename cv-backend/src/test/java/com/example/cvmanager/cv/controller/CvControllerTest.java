@@ -36,7 +36,7 @@ class CvControllerTest {
                                 {
                                   "ownerUserId": 1,
                                   "title": "",
-                                  "uploadedHtmlFilePath": "uploads/alice-cv.html"
+                                  "summary": "Student CV summary"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
@@ -46,14 +46,15 @@ class CvControllerTest {
         verifyNoInteractions(cvService);
     }
 
-    @Test
-    void uploadCvRejectsMissingFileWithValidationResponse() throws Exception {
-        mockMvc.perform(multipart("/api/cvs/upload")
-                        .param("ownerUserId", "1"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.details[0]").value("file: is required"));
-
-        verifyNoInteractions(cvService);
-    }
+    // IMPORTANT: Functionality deprecated
+//    @Test
+//    void uploadCvRejectsMissingFileWithValidationResponse() throws Exception {
+//        mockMvc.perform(multipart("/api/cvs/upload")
+//                        .param("ownerUserId", "1"))
+//                .andExpect(status().isBadRequest())
+//                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+//                .andExpect(jsonPath("$.details[0]").value("file: is required"));
+//
+//        verifyNoInteractions(cvService);
+//    }
 }
