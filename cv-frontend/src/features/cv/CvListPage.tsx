@@ -69,7 +69,7 @@ export function CvListPage() {
       <form className="toolbar" onSubmit={handleSearch}>
         <input
           className="text-input"
-          placeholder="Search title, owner, or file path"
+          placeholder="Search title, owner, or summary"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />

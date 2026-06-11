@@ -1,23 +1,19 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { ErrorMessage } from '../../components/ErrorMessage';
-import { FormField, TextInput } from '../../components/FormField';
 import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
-import { MAX_TITLE_LENGTH, validateRequiredTitle } from '../../lib/validation';
 import { AiActionPanel } from '../ai/AiActionPanel';
 import { getCurrentUser } from '../auth/authStore';
-import { archiveCv, Cv, getCv, updateCv } from './cvApi';
+import { CvPreview } from './components/CvPreview';
+import { archiveCv, Cv, getCv } from './cvApi';
 
 export function CvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [cv, setCv] = useState<Cv | null>(null);
-  const [title, setTitle] = useState('');
-  const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
@@ -38,36 +34,9 @@ export function CvDetailPage() {
         }
 
         setCv(loadedCv);
-        setTitle(loadedCv.title);
-        setSummary(loadedCv.summary ?? '');
       })
       .catch((exception) => setError(exception instanceof Error ? exception.message : 'Could not load CV'));
   }, [id]);
-
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!cv) {
-      return;
-    }
-
-    setSaving(true);
-    setError('');
-
-    try {
-      const updatedCv = await updateCv(cv.id, {
-        title,
-        summary
-      });
-      setCv(updatedCv);
-      setTitle(updatedCv.title);
-      setSummary(updatedCv.summary ?? '');
-    } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Could not update CV');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleArchive() {
     if (!cv) {
@@ -96,50 +65,31 @@ export function CvDetailPage() {
 
   return (
     <section className="page-section">
-      <PageHeader title={cv.title} description={`Owner: ${cv.ownerEmail}`} />
-
-      <form className="form-stack" onSubmit={handleSave} noValidate>
-        <FormField label="Title" htmlFor="title">
-          <TextInput
-            id="title"
-            required
-            maxLength={MAX_TITLE_LENGTH}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-        </FormField>
-        <label className="form-field" htmlFor="summary">
-          <span>Summary</span>
-          <textarea
-            id="summary"
-            className="text-input"
-            rows={6}
-            value={summary}
-            onChange={(event) => setSummary(event.target.value)}
-          />
-        </label>
-
-        <div className="toolbar">
-          <Button type="submit" disabled={saving || !title.trim()}>
-            {saving ? 'Saving...' : 'Save changes'}
-          </Button>
-          <Button type="button" variant="secondary" disabled={archiving} onClick={handleArchive}>
-            {archiving ? 'Archiving...' : 'Archive CV'}
-          </Button>
-        </div>
-      </form>
+      <PageHeader
+        title={cv.title}
+        description={`Owner: ${cv.ownerEmail}`}
+        actions={
+          <div className="page-actions">
+            <Link className="button primary" to={`/cvs/${cv.id}/edit`}>
+              Edit CV
+            </Link>
+          </div>
+        }
+      />
 
       <div className="detail-grid">
         <div className="panel">
           <div className="panel-header">
             <h3>CV Preview</h3>
           </div>
-          <div className="cv-preview">
-            <h2>{cv.title}</h2>
-            {cv.summary ? <p>{cv.summary}</p> : <p className="muted">No summary added yet.</p>}
-          </div>
+          <CvPreview cv={cv} />
         </div>
-        <AiActionPanel cvId={cv.id} />
+        <div className="form-stack">
+          <AiActionPanel cvId={cv.id} />
+          <Button type="button" variant="secondary" disabled={archiving} onClick={handleArchive}>
+            {archiving ? 'Archiving...' : 'Archive CV'}
+          </Button>
+        </div>
       </div>
     </section>
   );
