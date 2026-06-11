@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cv-manager-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cvmanager}
+      POSTGRES_USER: ${POSTGRES_USER:-cvmanager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cvmanager}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cvmanager} -d ${POSTGRES_DB:-cvmanager}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: cv-manager-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-cvmanager}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-cvmanager}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-cvmanager}
+      APP_AI_OPENAI_APIKEY: ${OPENAI_API_KEY:-}
+      APP_AI_OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.5}
+      APP_AUTH_SECRET: ${APP_AUTH_SECRET:-change-this-development-secret-key-to-at-least-32-bytes}
+    ports:
+      - "8081:8080"
+
+volumes:
+  postgres_data:

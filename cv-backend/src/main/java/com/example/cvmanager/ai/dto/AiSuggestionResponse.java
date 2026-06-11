@@ -7,6 +7,7 @@ public record AiSuggestionResponse(
         Long id,
         Long cvId,
         AiActionType actionType,
+        String targetKey,
         String originalText,
         String suggestedText,
         String status,

@@ -6,10 +6,11 @@ import { FormField, TextInput } from '../../components/FormField';
 import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
 import { compactErrors, MAX_TITLE_LENGTH, validateRequiredTitle } from '../../lib/validation';
+import { AiActionPanel, type AiEditableSection } from '../ai/AiActionPanel';
 import { getCurrentUser } from '../auth/authStore';
 import { CvStructuredForm, CvStructuredFormValue, emptyStructuredCvValue } from './components/CvStructuredForm';
 import { CvPreview } from './components/CvPreview';
-import { Cv, getCv, updateCv } from './cvApi';
+import { Cv, CvEducationEntry, CvSkill, CvWorkExperienceEntry, getCv, updateCv } from './cvApi';
 
 function structuredValueFromCv(cv: Cv): CvStructuredFormValue {
   return {
@@ -20,6 +21,69 @@ function structuredValueFromCv(cv: Cv): CvStructuredFormValue {
     languages: cv.languages,
     links: cv.links
   };
+}
+
+function compactText(parts: Array<string | null | undefined>) {
+  return parts.map((part) => part?.trim()).filter(Boolean).join(' | ');
+}
+
+function educationTargetKey(entry: CvEducationEntry, index: number) {
+  return `education:${entry.id ?? index}`;
+}
+
+function workTargetKey(entry: CvWorkExperienceEntry, index: number) {
+  return `workExperience:${entry.id ?? index}`;
+}
+
+function educationText(entry: CvEducationEntry) {
+  return compactText([
+    entry.institution,
+    entry.degree,
+    entry.fieldOfStudy,
+    compactText([entry.startDate, entry.endDate]),
+    entry.description
+  ]);
+}
+
+function workExperienceText(entry: CvWorkExperienceEntry) {
+  return compactText([
+    entry.jobTitle,
+    entry.employer,
+    entry.location,
+    compactText([entry.startDate, entry.endDate]),
+    entry.description
+  ]);
+}
+
+function skillsText(skills: CvSkill[]) {
+  return skills
+    .map((skill) => compactText([skill.name, skill.category, skill.proficiency]))
+    .filter(Boolean)
+    .join('\n');
+}
+
+function parseSkillSuggestion(suggestedText: string, currentSkills: CvSkill[]) {
+  const suggestedItems = suggestedText
+    .split(/\r?\n|,/)
+    .map((item) => item.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean);
+
+  if (suggestedItems.length === 0) {
+    return currentSkills;
+  }
+
+  return suggestedItems.map((item, index) => {
+    const fallback = currentSkills[index];
+    const parts = item.split(/\s*(?:\|| - | – | — )\s*/).filter(Boolean);
+
+    return {
+      ...fallback,
+      name: parts[0] ?? fallback?.name ?? item,
+      category: fallback?.category ?? null,
+      proficiency: parts.length > 1 ? parts.slice(1).join(' - ') : fallback?.proficiency ?? null,
+      displayOrder: fallback?.displayOrder ?? index
+    };
+  });
 }
 
 export function CvEditPage() {
@@ -102,6 +166,71 @@ export function CvEditPage() {
     ...structuredCv
   };
 
+  function applyEducationSuggestion(targetKey: string, suggestedText: string) {
+    setStructuredCv((current) => ({
+      ...current,
+      educationEntries: current.educationEntries.map((entry, index) => (
+        educationTargetKey(entry, index) === targetKey ? { ...entry, description: suggestedText } : entry
+      ))
+    }));
+  }
+
+  function applyWorkExperienceSuggestion(targetKey: string, suggestedText: string) {
+    setStructuredCv((current) => ({
+      ...current,
+      workExperienceEntries: current.workExperienceEntries.map((entry, index) => (
+        workTargetKey(entry, index) === targetKey ? { ...entry, description: suggestedText } : entry
+      ))
+    }));
+  }
+
+  function applySkillsSuggestion(suggestedText: string) {
+    setStructuredCv((current) => ({
+      ...current,
+      skills: parseSkillSuggestion(suggestedText, current.skills)
+    }));
+  }
+
+  const aiSections: AiEditableSection[] = [
+    {
+      key: 'summary',
+      section: 'summary',
+      label: 'Summary',
+      text: summary,
+      onAccept: setSummary
+    },
+    ...structuredCv.educationEntries.map((entry, index) => {
+      const key = educationTargetKey(entry, index);
+      return {
+        key,
+        section: 'education' as const,
+        label: `Education: ${entry.institution || `Entry ${index + 1}`}`,
+        text: educationText(entry),
+        onAccept: (suggestedText: string) => applyEducationSuggestion(key, suggestedText)
+      };
+    }),
+    ...structuredCv.workExperienceEntries.map((entry, index) => {
+      const key = workTargetKey(entry, index);
+      return {
+        key,
+        section: 'workExperience' as const,
+        label: `Work experience: ${entry.employer || `Entry ${index + 1}`}`,
+        text: workExperienceText(entry),
+        onAccept: (suggestedText: string) => applyWorkExperienceSuggestion(key, suggestedText)
+      };
+    })
+  ];
+
+  if (structuredCv.skills.length > 0) {
+    aiSections.push({
+      key: 'skills',
+      section: 'skills',
+      label: 'Skills',
+      text: skillsText(structuredCv.skills),
+      onAccept: applySkillsSuggestion
+    });
+  }
+
   return (
     <section className="page-section">
       <PageHeader
@@ -141,11 +270,15 @@ export function CvEditPage() {
           </div>
         </form>
 
-        <div className="panel">
-          <div className="panel-header">
-            <h3>Preview</h3>
+        <div className="form-stack">
+          <AiActionPanel cvId={cv.id} sections={aiSections} />
+
+          <div className="panel">
+            <div className="panel-header">
+              <h3>Preview</h3>
+            </div>
+            <CvPreview cv={previewCv} />
           </div>
-          <CvPreview cv={previewCv} />
         </div>
       </div>
     </section>

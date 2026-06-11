@@ -365,9 +365,16 @@ tr:last-child td {
 
 .suggestion {
   display: grid;
-  gap: 6px;
+  gap: 10px;
   padding: 12px 0;
   border-top: 1px solid #edf1f4;
+}
+
+.suggestion-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .suggestion span {
@@ -378,6 +385,20 @@ tr:last-child td {
 .suggestion p {
   margin: 0;
   color: #33404a;
+}
+
+.suggestion-comparison {
+  display: grid;
+  gap: 8px;
+}
+
+.suggestion-comparison div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid #edf1f4;
+  border-radius: 6px;
+  background: #f8fafb;
 }
 
 .settings-list {
