@@ -5,6 +5,12 @@ export type LoginRequest = {
   password: string;
 };
 
+export type RegisterRequest = {
+  email: string;
+  displayName: string;
+  password: string;
+};
+
 export type LoginResponse = {
   userId: number;
   email: string;
@@ -16,6 +22,13 @@ export type LoginResponse = {
 
 export function login(request: LoginRequest) {
   return apiRequest<LoginResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(request)
+  });
+}
+
+export function register(request: RegisterRequest) {
+  return apiRequest<LoginResponse>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify(request)
   });

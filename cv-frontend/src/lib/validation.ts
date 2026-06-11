@@ -3,7 +3,6 @@ export function required(value: string) {
 }
 
 export const MAX_TITLE_LENGTH = 255;
-export const MAX_HTML_UPLOAD_BYTES = 1_000_000;
 
 export function validateEmail(value: string) {
   const trimmed = value.trim();
@@ -47,14 +46,6 @@ export function validateRequiredTitle(value: string) {
   return '';
 }
 
-export function validateOptionalTitle(value: string) {
-  if (value.trim().length > MAX_TITLE_LENGTH) {
-    return 'Title must be 255 characters or fewer.';
-  }
-
-  return '';
-}
-
 export function validateOwnerUserId(value: string) {
   const trimmed = value.trim();
 
@@ -64,28 +55,6 @@ export function validateOwnerUserId(value: string) {
 
   if (!/^\d+$/.test(trimmed) || Number(trimmed) <= 0) {
     return 'Owner user id must be a positive number.';
-  }
-
-  return '';
-}
-
-export function validateHtmlFile(file: File | null) {
-  if (!file) {
-    return 'Choose an HTML file first.';
-  }
-
-  const lowerName = file.name.toLowerCase();
-  const looksHtml =
-    lowerName.endsWith('.html') ||
-    lowerName.endsWith('.htm') ||
-    file.type.toLowerCase().includes('html');
-
-  if (!looksHtml) {
-    return 'Only HTML files are accepted.';
-  }
-
-  if (file.size > MAX_HTML_UPLOAD_BYTES) {
-    return 'HTML file must be 1 MB or smaller.';
   }
 
   return '';

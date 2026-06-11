@@ -1,15 +1,85 @@
-import { apiRequest, API_BASE_URL, readErrorMessage } from '../../app/apiClient';
-import { getAuthToken, logout } from '../auth/authStore';
+import { apiRequest } from '../../app/apiClient';
 
 export type Cv = {
   id: number;
   ownerUserId: number;
   ownerEmail: string;
   title: string;
-  uploadedHtmlFilePath: string;
+  summary: string | null;
+  personalDetails: CvPersonalDetails | null;
+  educationEntries: CvEducationEntry[];
+  workExperienceEntries: CvWorkExperienceEntry[];
+  skills: CvSkill[];
+  languages: CvLanguage[];
+  links: CvLink[];
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+};
+
+export type CvPersonalDetails = {
+  id?: number;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  headline: string | null;
+};
+
+export type CvEducationEntry = {
+  id?: number;
+  institution: string;
+  degree: string | null;
+  fieldOfStudy: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  description: string | null;
+  displayOrder: number;
+};
+
+export type CvWorkExperienceEntry = {
+  id?: number;
+  employer: string;
+  jobTitle: string;
+  location: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  description: string | null;
+  displayOrder: number;
+};
+
+export type CvSkill = {
+  id?: number;
+  name: string;
+  category: string | null;
+  proficiency: string | null;
+  displayOrder: number;
+};
+
+export type CvLanguage = {
+  id?: number;
+  name: string;
+  proficiency: string | null;
+  displayOrder: number;
+};
+
+export type CvLink = {
+  id?: number;
+  label: string;
+  url: string;
+  displayOrder: number;
+};
+
+export type CvCreateRequest = {
+  ownerUserId: number;
+  title: string;
+  summary: string;
+  personalDetails?: CvPersonalDetails | null;
+  educationEntries?: CvEducationEntry[];
+  workExperienceEntries?: CvWorkExperienceEntry[];
+  skills?: CvSkill[];
+  languages?: CvLanguage[];
+  links?: CvLink[];
 };
 
 export function listCvs() {
@@ -24,39 +94,22 @@ export function getCv(id: string) {
   return apiRequest<Cv>(`/api/cvs/${id}`);
 }
 
-export function getCvHtmlUrl(id: number | string) {
-  return `${API_BASE_URL}/api/cvs/${id}/html`;
-}
-
-export async function getCvHtml(id: number | string) {
-  const token = getAuthToken();
-  const response = await fetch(getCvHtmlUrl(id), {
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-
-  if (!response.ok) {
-    const message = await readErrorMessage(response);
-
-    if (response.status === 401) {
-      logout(message);
-    }
-
-    throw new Error(message);
-  }
-
-  return response.text();
-}
-
-export function uploadCv(formData: FormData) {
-  return apiRequest<Cv>('/api/cvs/upload', {
+export function createCv(request: CvCreateRequest) {
+  return apiRequest<Cv>('/api/cvs', {
     method: 'POST',
-    body: formData
+    body: JSON.stringify(request)
   });
 }
 
 export type CvUpdateRequest = {
   title: string;
-  uploadedHtmlFilePath: string;
+  summary: string;
+  personalDetails?: CvPersonalDetails | null;
+  educationEntries?: CvEducationEntry[];
+  workExperienceEntries?: CvWorkExperienceEntry[];
+  skills?: CvSkill[];
+  languages?: CvLanguage[];
+  links?: CvLink[];
 };
 
 export function updateCv(id: number | string, request: CvUpdateRequest) {

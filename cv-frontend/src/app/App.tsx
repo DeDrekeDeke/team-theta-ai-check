@@ -11,9 +11,9 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
-  { to: '/upload', label: 'Upload' },
-  { to: '/admin/users', label: 'Users' },
-  { to: '/admin/settings', label: 'Settings' }
+  { to: '/create', label: 'Create' },
+  { to: '/admin/users', label: 'Users'},
+  { to: '/admin/settings', label: 'Settings'}
 ];
 
 function isAdminRoute(path: string) {
@@ -116,9 +116,14 @@ export function App() {
               </button>
             </>
           ) : (
-            <NavLink to="/login" className="nav-link">
-              Log in
-            </NavLink>
+            <>
+              <NavLink to="/login" className="nav-link">
+                Log in
+              </NavLink>
+              <NavLink to="/register" className="nav-link">
+                Register
+              </NavLink>
+            </>
           )}
         </div>
       </aside>
