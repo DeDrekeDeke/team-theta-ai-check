@@ -140,6 +140,15 @@ textarea {
   gap: 14px;
 }
 
+.form-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.form-actions .button {
+  width: 100%;
+}
+
 .toolbar {
   grid-template-columns: minmax(0, 1fr) auto;
 }
