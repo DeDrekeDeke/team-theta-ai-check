@@ -15,26 +15,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <ProtectedRoute><CvListPage /></ProtectedRoute> },
       { path: 'login', element: <LoginPage /> },
-      { path: 'upload', element: <CvUploadPage /> },
-      { path: 'cvs/:id', element: <CvDetailPage /> },
-      {
-        path: 'admin/users',
-        element: (
-          <ProtectedRoute requireAdmin>
-            <UsersPage />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: 'admin/settings',
-        element: (
-          <ProtectedRoute requireAdmin>
-            <SettingsPage />
-          </ProtectedRoute>
-        )
-      },
       { path: 'upload', element: <ProtectedRoute><CvUploadPage /></ProtectedRoute> },
       { path: 'cvs/:id', element: <ProtectedRoute><CvDetailPage /></ProtectedRoute> },
+      { path: 'admin/users', element: <ProtectedRoute requireAdmin><UsersPage /></ProtectedRoute>},
       { path: 'admin/settings', element: <ProtectedRoute requireAdmin><SettingsPage /></ProtectedRoute> }
     ]
   }
