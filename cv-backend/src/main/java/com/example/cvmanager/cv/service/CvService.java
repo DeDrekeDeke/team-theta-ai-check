@@ -53,7 +53,7 @@ public class CvService {
 
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs(AuthenticatedUser user) {
-        return visibleCvs(user).stream()
+        return getAllVisibleCvsBasedOnPermission(user).stream()
                 .map(cvMapper::toResponse)
                 .toList();
     }
@@ -76,7 +76,7 @@ public class CvService {
             return listCvs(user);
         }
 
-        return visibleCvs(user).stream()
+        return getAllVisibleCvsBasedOnPermission(user).stream()
                 .filter(cv -> matchesSearch(cv, q.trim()))
                 .map(cvMapper::toResponse)
                 .toList();
@@ -150,13 +150,15 @@ public class CvService {
         return Sort.by(Sort.Direction.DESC, "updatedAt");
     }
 
-    private List<Cv> visibleCvs(AuthenticatedUser user) {
+    private List<Cv> getAllVisibleCvsBasedOnPermission(AuthenticatedUser user) {
         if (user.admin()) {
             return cvRepository.findByArchivedAtIsNull(updatedAtDescending());
         }
-        return cvRepository.findByOwnerId(user.userId()).stream()
-                .filter(cv -> !cv.isArchived())
-                .toList();
+        return getVisibleCvsForOwner(user.userId());
+    }
+
+    private List<Cv> getVisibleCvsForOwner(Long ownerId) {
+        return cvRepository.findByOwnerIdAndArchivedAtIsNull(ownerId, updatedAtDescending());
     }
 
     private boolean matchesSearch(Cv cv, String query) {

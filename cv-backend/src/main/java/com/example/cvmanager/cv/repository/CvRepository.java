@@ -33,7 +33,6 @@ public interface CvRepository extends JpaRepository<Cv, Long> {
                 AND (
                     lower(cv.title) LIKE lower(concat('%', :query, '%'))
                     OR lower(owner.email) LIKE lower(concat('%', :query, '%'))
-                    OR lower(cv.uploadedHtmlFilePath) LIKE lower(concat('%', :query, '%'))
                 )
             ORDER BY cv.updatedAt DESC
             """)
