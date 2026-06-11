@@ -2,8 +2,10 @@ package com.example.cvmanager.ai.controller;
 
 import com.example.cvmanager.ai.dto.AiSuggestionResponse;
 import com.example.cvmanager.ai.service.AiApplicationService;
+import com.example.cvmanager.auth.security.AuthenticatedUser;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,13 +24,17 @@ public class AiController {
     }
 
     @GetMapping("/suggestions")
-    public List<AiSuggestionResponse> listSuggestions(@PathVariable Long cvId) {
-        return aiApplicationService.listSuggestions(cvId);
+    public List<AiSuggestionResponse> listSuggestions(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long cvId) {
+        return aiApplicationService.listSuggestions(user, cvId);
     }
 
     @PostMapping("/improve-summary")
     @ResponseStatus(HttpStatus.CREATED)
-    public AiSuggestionResponse improveSummary(@PathVariable Long cvId) {
-        return aiApplicationService.improveSummary(cvId);
+    public AiSuggestionResponse improveSummary(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long cvId) {
+        return aiApplicationService.improveSummary(user, cvId);
     }
 }

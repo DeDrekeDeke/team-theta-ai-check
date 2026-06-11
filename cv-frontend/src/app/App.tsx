@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
+import { logoutRequest } from '../features/auth/authApi';
 
 type NavItem = {
   to: string;
@@ -18,6 +19,7 @@ const navItems: NavItem[] = [
 export function App() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
+  const visibleNavItems = navItems.filter((item) => item.to !== '/admin/settings' || user?.admin);
 
   useEffect(() => {
     function handleAuthChanged() {
@@ -33,9 +35,15 @@ export function App() {
     };
   }, []);
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
+  async function handleLogout() {
+    try {
+      await logoutRequest();
+    } catch {
+      // Clear local auth state even if the token is already expired.
+    } finally {
+      logout();
+      navigate('/login', { replace: true });
+    }
   }
 
   return (
@@ -47,17 +55,15 @@ export function App() {
         </div>
 
         <nav className="nav-list" aria-label="Main navigation">
-          {navItems
-            .filter((item) => !item.adminOnly || user?.admin)
-            .map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-              >
-                {item.label}
-              </NavLink>
-            ))}
+          {visibleNavItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="sidebar-footer">

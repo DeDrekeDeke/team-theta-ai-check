@@ -11,15 +11,18 @@ import {
   validateOptionalTitle,
   validateOwnerUserId
 } from '../../lib/validation';
+import { getCurrentUser } from '../auth/authStore';
 import { uploadCv } from './cvApi';
 
 export function CvUploadPage() {
+  const user = getCurrentUser();
   const navigate = useNavigate();
-  const [ownerUserId, setOwnerUserId] = useState('2');
+  const [ownerUserId, setOwnerUserId] = useState(user ? String(user.userId) : '');
   const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const canChooseOwner = user?.admin ?? false;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,6 +65,7 @@ export function CvUploadPage() {
             required
             min={1}
             step={1}
+            disabled={!canChooseOwner}
             value={ownerUserId}
             onChange={(event) => setOwnerUserId(event.target.value)}
           />

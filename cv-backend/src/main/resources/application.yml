@@ -19,8 +19,10 @@ spring:
         format_sql: true
 
 app:
-  as-is:
-    demo-token-prefix: demo-token
+  auth:
+    issuer: cv-manager
+    secret: ${APP_AUTH_SECRET:change-this-development-secret-key-to-at-least-32-bytes}
+    access-token-ttl-minutes: 15
   admin:
     email: admin@example.com
     password: admin123

@@ -6,7 +6,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.example.cvmanager.auth.security.AuthenticatedUser;
 import com.example.cvmanager.common.exception.BadRequestException;
+import com.example.cvmanager.common.security.AdminAccessService;
 import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.model.UserAccount;
@@ -21,24 +23,27 @@ class CvServiceTest {
 
     private CvRepository cvRepository;
     private UserRepository userRepository;
+    private AuthenticatedUser user;
     private CvService cvService;
 
     @BeforeEach
     void setUp() {
         cvRepository = mock(CvRepository.class);
         userRepository = mock(UserRepository.class);
+        user = new AuthenticatedUser(1L, "alice@example.com", "Alice Student", false);
         cvService = new CvService(
                 cvRepository,
                 userRepository,
                 mock(CvMapper.class),
-                new CvStorageProperties("build/test-uploads"));
+                new CvStorageProperties("build/test-uploads"),
+                mock(AdminAccessService.class));
     }
 
     @Test
     void uploadHtmlCvRejectsNonPositiveOwnerId() {
         BadRequestException exception = assertThrows(
                 BadRequestException.class,
-                () -> cvService.uploadHtmlCv(0L, "CV", null));
+                () -> cvService.uploadHtmlCv(user, 0L, "CV", null));
 
         assertEquals("OWNER_INVALID", exception.getCode());
         verifyNoInteractions(userRepository, cvRepository);
@@ -57,7 +62,7 @@ class CvServiceTest {
 
         BadRequestException exception = assertThrows(
                 BadRequestException.class,
-                () -> cvService.uploadHtmlCv(1L, "Alice CV", file));
+                () -> cvService.uploadHtmlCv(user, 1L, "Alice CV", file));
 
         assertEquals("CV_FILE_UNSAFE", exception.getCode());
         verifyNoInteractions(cvRepository);
