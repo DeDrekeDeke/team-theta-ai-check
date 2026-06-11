@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.example.cvmanager.admin.service.AdminProperties;
 import com.example.cvmanager.auth.config.AuthProperties;
 import com.example.cvmanager.auth.dto.LoginRequest;
 import com.example.cvmanager.auth.security.JwtService;
@@ -32,7 +31,6 @@ class AuthServiceTest {
         passwordEncoder = new BCryptPasswordEncoder();
         authService = new AuthService(
                 userRepository,
-                new AdminProperties("admin@example.com", "admin123"),
                 passwordEncoder,
                 new JwtService(new AuthProperties(
                         "cv-manager",
@@ -55,6 +53,7 @@ class AuthServiceTest {
 
         assertEquals("alice@example.com", response.email());
         assertEquals("Alice Student", response.displayName());
+        assertEquals("USER", response.role());
         assertFalse(response.admin());
         assertNotNull(response.token());
     }

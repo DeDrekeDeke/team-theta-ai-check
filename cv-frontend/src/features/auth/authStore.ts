@@ -19,6 +19,10 @@ export function getAuthToken(): string | null {
   return getCurrentUser()?.token ?? null;
 }
 
+export function isAdminUser(user: LoginResponse | null) {
+  return user?.role === 'ADMIN';
+}
+
 export function consumeAuthMessage(): string | null {
   const message = authMessage;
   authMessage = null;

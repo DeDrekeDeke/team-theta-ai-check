@@ -30,7 +30,7 @@ class CvServiceTest {
     void setUp() {
         cvRepository = mock(CvRepository.class);
         userRepository = mock(UserRepository.class);
-        user = new AuthenticatedUser(1L, "alice@example.com", "Alice Student", false);
+        user = new AuthenticatedUser(1L, "alice@example.com", "Alice Student", "USER");
         cvService = new CvService(
                 cvRepository,
                 userRepository,

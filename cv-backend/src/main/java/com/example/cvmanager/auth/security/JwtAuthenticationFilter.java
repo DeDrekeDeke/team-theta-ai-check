@@ -54,6 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             AuthenticatedUser user = jwtService.parseAccessToken(token);
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
             if (user.admin()) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
             }

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
-import { getCurrentUser } from '../authStore';
+import { Navigate, useLocation } from 'react-router-dom';
+import { getCurrentUser, isAdminUser } from '../authStore';
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -8,9 +8,14 @@ type ProtectedRouteProps = {
 };
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+  const location = useLocation();
   const user = getCurrentUser();
 
-  if (requireAdmin && !user?.admin) {
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (requireAdmin && !isAdminUser(user)) {
     return <Navigate to="/" replace />;
   }
 

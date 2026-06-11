@@ -18,4 +18,7 @@ public record UserUpdateRequest(
         @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
         @Pattern(regexp = ".*\\S.*", message = "Password must contain at least one non-whitespace character")
         String password,
-        boolean admin) {}
+
+        @NotBlank(message = "Role is required")
+        @Pattern(regexp = "USER|ADMIN", message = "Role must be USER or ADMIN")
+        String role) {}

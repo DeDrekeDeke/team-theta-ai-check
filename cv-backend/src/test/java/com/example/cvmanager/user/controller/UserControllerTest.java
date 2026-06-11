@@ -47,6 +47,7 @@ class UserControllerTest {
                 4L,
                 "carol@example.com",
                 "Carol Candidate",
+                "USER",
                 false,
                 LocalDateTime.of(2026, 6, 10, 12, 0)));
 
@@ -62,6 +63,7 @@ class UserControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("carol@example.com"))
                 .andExpect(jsonPath("$.displayName").value("Carol Candidate"))
+                .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.admin").value(false))
                 .andExpect(jsonPath("$.password").doesNotExist());
     }
