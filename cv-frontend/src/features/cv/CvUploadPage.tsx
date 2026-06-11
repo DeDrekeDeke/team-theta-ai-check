@@ -58,18 +58,19 @@ export function CvUploadPage() {
     <section className="page-section narrow">
       <PageHeader title="Upload CV" description="Upload an HTML CV file to the AS-IS backend." />
       <form className="form-stack" onSubmit={handleSubmit} noValidate>
-        <FormField label="Owner user id" htmlFor="ownerUserId">
-          <TextInput
-            id="ownerUserId"
-            type="number"
-            required
-            min={1}
-            step={1}
-            disabled={!canChooseOwner}
-            value={ownerUserId}
-            onChange={(event) => setOwnerUserId(event.target.value)}
-          />
-        </FormField>
+        {canChooseOwner ? (
+          <FormField label="Owner user id" htmlFor="ownerUserId">
+            <TextInput
+              id="ownerUserId"
+              type="number"
+              required
+              min={1}
+              step={1}
+              value={ownerUserId}
+              onChange={(event) => setOwnerUserId(event.target.value)}
+            />
+          </FormField>
+        ) : null}
         <FormField label="Title" htmlFor="title">
           <TextInput
             id="title"
