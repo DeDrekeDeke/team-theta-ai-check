@@ -1,25 +1,32 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
 import { logoutRequest } from '../features/auth/authApi';
 
 type NavItem = {
   to: string;
   label: string;
-  adminOnly?: boolean;
 };
 
 const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
   { to: '/upload', label: 'Upload' },
-  { to: '/admin/users', label: 'Users', adminOnly: true },
+  { to: '/admin/users', label: 'Users' },
   { to: '/admin/settings', label: 'Settings' }
 ];
 
+function isAdminRoute(path: string) {
+  return path === '/admin' || path.startsWith('/admin/');
+}
+
 export function App() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
-  const visibleNavItems = navItems.filter((item) => item.to !== '/admin/settings' || user?.admin);
+  const isLoginPage = location.pathname === '/login';
+  const visibleNavItems = isLoginPage
+    ? []
+    : navItems.filter((item) => !isAdminRoute(item.to) || user?.admin);
 
   useEffect(() => {
     function handleAuthChanged() {
@@ -67,7 +74,11 @@ export function App() {
         </nav>
 
         <div className="sidebar-footer">
-          {user ? (
+          {isLoginPage ? (
+            <NavLink to="/login" className="nav-link">
+              Log in
+            </NavLink>
+          ) : user ? (
             <>
               <span>{user.email}</span>
               <button className="link-button" type="button" onClick={handleLogout}>
