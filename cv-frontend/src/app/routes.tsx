@@ -3,11 +3,12 @@ import { App } from './App';
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute';
 import { LoginPage } from '../features/auth/LoginPage';
 import { RegisterPage } from '../features/auth/RegisterPage';
+import { CvCreatePage } from '../features/cv/CvCreatePage';
+import { CvDetailPage } from '../features/cv/CvDetailPage';
+import { CvEditPage } from '../features/cv/CvEditPage';
+import { CvListPage } from '../features/cv/CvListPage';
 import { SettingsPage } from '../features/admin/SettingsPage';
 import { UsersPage } from '../features/admin/UsersPage';
-import { CvDetailPage } from '../features/cv/CvDetailPage';
-import { CvListPage } from '../features/cv/CvListPage';
-import { CvUploadPage } from '../features/cv/CvUploadPage';
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,8 @@ export const router = createBrowserRouter([
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'upload', element: <ProtectedRoute><CvUploadPage /></ProtectedRoute> },
+      { path: 'create', element: <ProtectedRoute><CvCreatePage /></ProtectedRoute> },
+      { path: 'cvs/:id/edit', element: <ProtectedRoute><CvEditPage /></ProtectedRoute> },
       { path: 'cvs/:id', element: <ProtectedRoute><CvDetailPage /></ProtectedRoute> },
       {
         path: 'admin/users',

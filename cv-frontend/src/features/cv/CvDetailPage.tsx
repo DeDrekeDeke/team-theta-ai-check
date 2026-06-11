@@ -1,25 +1,20 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { ErrorMessage } from '../../components/ErrorMessage';
-import { FormField, TextInput } from '../../components/FormField';
 import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
-import { MAX_TITLE_LENGTH, validateRequiredTitle } from '../../lib/validation';
 import { AiActionPanel } from '../ai/AiActionPanel';
-import { archiveCv, Cv, getCv, getCvHtml, updateCv } from './cvApi';
+import { getCurrentUser } from '../auth/authStore';
+import { CvPreview } from './components/CvPreview';
+import { archiveCv, Cv, getCv } from './cvApi';
 
 export function CvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [cv, setCv] = useState<Cv | null>(null);
-  const [html, setHtml] = useState('');
-  const [title, setTitle] = useState('');
-  const [loadError, setLoadError] = useState('');
-  const [formError, setFormError] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [archiving, setArchiving] = useState(false);
-  const [openingHtml, setOpeningHtml] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -27,44 +22,21 @@ export function CvDetailPage() {
     }
 
     getCv(id)
-      .then(async (loadedCv) => {
-        const loadedHtml = await getCvHtml(id);
+      .then((loadedCv) => {
+        const user = getCurrentUser();
+
+        if (!user) {
+          throw new Error('Log in to view this CV');
+        }
+
+        if (!user.admin && loadedCv.ownerUserId !== user.userId) {
+          throw new Error('You can only view your own CVs');
+        }
+
         setCv(loadedCv);
-        setTitle(loadedCv.title);
-        setHtml(loadedHtml);
       })
-      .catch((exception) => setLoadError(exception instanceof Error ? exception.message : 'Could not load CV'));
+      .catch((exception) => setError(exception instanceof Error ? exception.message : 'Could not load CV'));
   }, [id]);
-
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!cv) {
-      return;
-    }
-
-    const validationError = validateRequiredTitle(title);
-    if (validationError) {
-      setFormError(validationError);
-      return;
-    }
-
-    setSaving(true);
-    setFormError('');
-
-    try {
-      const updatedCv = await updateCv(cv.id, {
-        title: title.trim(),
-        uploadedHtmlFilePath: cv.uploadedHtmlFilePath
-      });
-      setCv(updatedCv);
-      setTitle(updatedCv.title);
-    } catch (exception) {
-      setFormError(exception instanceof Error ? exception.message : 'Could not update CV');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleArchive() {
     if (!cv) {
@@ -72,32 +44,19 @@ export function CvDetailPage() {
     }
 
     setArchiving(true);
-    setFormError('');
+    setError('');
 
     try {
       await archiveCv(cv.id);
       navigate('/');
     } catch (exception) {
-      setFormError(exception instanceof Error ? exception.message : 'Could not archive CV');
+      setError(exception instanceof Error ? exception.message : 'Could not archive CV');
       setArchiving(false);
     }
   }
 
-  function handleOpenRawHtml() {
-    setOpeningHtml(true);
-
-    try {
-      const blob = new Blob([html], { type: 'text/html' });
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank', 'noopener,noreferrer');
-      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-    } finally {
-      setOpeningHtml(false);
-    }
-  }
-
-  if (loadError) {
-    return <ErrorMessage message={loadError} />;
+  if (error) {
+    return <ErrorMessage message={error} />;
   }
 
   if (!cv) {
@@ -106,47 +65,31 @@ export function CvDetailPage() {
 
   return (
     <section className="page-section">
-      <PageHeader title={cv.title} description={`Owner: ${cv.ownerEmail}`} />
-
-      <form className="form-stack" onSubmit={handleSave} noValidate>
-        <FormField label="Title" htmlFor="title">
-          <TextInput
-            id="title"
-            required
-            maxLength={MAX_TITLE_LENGTH}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-        </FormField>
-
-        {formError ? <ErrorMessage message={formError} /> : null}
-
-        <div className="toolbar">
-          <Button type="submit" disabled={saving || !title.trim()}>
-            {saving ? 'Saving...' : 'Save changes'}
-          </Button>
-          <Button type="button" variant="secondary" disabled={archiving} onClick={handleArchive}>
-            {archiving ? 'Archiving...' : 'Archive CV'}
-          </Button>
-        </div>
-      </form>
+      <PageHeader
+        title={cv.title}
+        description={`Owner: ${cv.ownerEmail}`}
+        actions={
+          <div className="page-actions">
+            <Link className="button primary" to={`/cvs/${cv.id}/edit`}>
+              Edit CV
+            </Link>
+          </div>
+        }
+      />
 
       <div className="detail-grid">
         <div className="panel">
           <div className="panel-header">
-            <h3>Uploaded HTML Content</h3>
-            <Button type="button" variant="secondary" onClick={handleOpenRawHtml} disabled={openingHtml}>
-              {openingHtml ? 'Opening...' : 'Open raw HTML'}
-            </Button>
+            <h3>CV Preview</h3>
           </div>
-          <iframe
-            className="html-preview-frame"
-            title="Uploaded CV preview"
-            sandbox=""
-            srcDoc={html}
-          />
+          <CvPreview cv={cv} />
         </div>
-        <AiActionPanel cvId={cv.id} />
+        <div className="form-stack">
+          <AiActionPanel cvId={cv.id} />
+          <Button type="button" variant="secondary" disabled={archiving} onClick={handleArchive}>
+            {archiving ? 'Archiving...' : 'Archive CV'}
+          </Button>
+        </div>
       </div>
     </section>
   );

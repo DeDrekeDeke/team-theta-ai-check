@@ -1,9 +1,9 @@
 package com.example.cvmanager.cv.controller;
 
+import com.example.cvmanager.cv.dto.request.CvCreateRequest;
+import com.example.cvmanager.cv.dto.response.CvResponse;
+import com.example.cvmanager.cv.dto.request.CvUpdateRequest;
 import com.example.cvmanager.auth.security.AuthenticatedUser;
-import com.example.cvmanager.cv.dto.CvCreateRequest;
-import com.example.cvmanager.cv.dto.CvResponse;
-import com.example.cvmanager.cv.dto.CvUpdateRequest;
 import com.example.cvmanager.cv.service.CvService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -46,6 +46,7 @@ public class CvController {
         return cvService.getCv(user, id);
     }
 
+    // IMPORTANT: functionality no longer supported, methods preserved for documentation purposes.
     @GetMapping(value = "/{id}/html", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getCvHtml(
             @AuthenticationPrincipal AuthenticatedUser user,
@@ -65,6 +66,7 @@ public class CvController {
         return cvService.createCv(user, request);
     }
 
+    // IMPORTANT: functionality no longer supported, methods preserved for documentation purposes.
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public CvResponse uploadCv(
@@ -75,6 +77,7 @@ public class CvController {
         return cvService.uploadHtmlCv(user, ownerUserId, title, file);
     }
 
+    // Disabled functionality
     @PostMapping(value = "/legacy-preview", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_HTML_VALUE)
     public String legacyPreview(@RequestBody String input) {
         return cvService.buildLegacyPreview(input);

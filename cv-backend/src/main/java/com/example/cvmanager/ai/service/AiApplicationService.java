@@ -30,7 +30,7 @@ public class AiApplicationService {
     @Transactional
     public AiSuggestionResponse improveSummary(AuthenticatedUser user, Long cvId) {
         Cv cv = cvService.findAuthorizedCv(user, cvId);
-        String source = cvService.getUploadedHtml(user, cvId);
+        String source = cv.getSummary();
         String suggestedText = aiService.suggest(AiActionType.IMPROVE_SUMMARY, source);
 
         AiSuggestion suggestion = new AiSuggestion(
