@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface CvRepository extends JpaRepository<Cv, Long> {
 
-    List<Cv> findByOwnerId(Long ownerId);
+    List<Cv> findByOwnerIdAndArchivedAtIsNull(Long ownerId, Sort sort);
 
     @Query("""
             SELECT cv FROM Cv cv
@@ -24,6 +24,20 @@ public interface CvRepository extends JpaRepository<Cv, Long> {
             ORDER BY cv.updatedAt DESC
             """)
     List<Cv> search(@Param("query") String query);
+
+    @Query("""
+            SELECT cv FROM Cv cv
+            JOIN cv.owner owner
+            WHERE cv.archivedAt IS NULL
+                AND cv.owner.id = :ownerId
+                AND (
+                    lower(cv.title) LIKE lower(concat('%', :query, '%'))
+                    OR lower(owner.email) LIKE lower(concat('%', :query, '%'))
+                    OR lower(cv.uploadedHtmlFilePath) LIKE lower(concat('%', :query, '%'))
+                )
+            ORDER BY cv.updatedAt DESC
+            """)
+    List<Cv> searchByOwner(@Param("ownerId") Long ownerId, @Param("query") String query);
 
     List<Cv> findByArchivedAtIsNull(Sort sort);
 

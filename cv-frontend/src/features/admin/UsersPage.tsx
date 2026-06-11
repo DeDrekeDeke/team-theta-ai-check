@@ -18,7 +18,7 @@ const emptyEditForm = {
   email: '',
   displayName: '',
   password: '',
-  admin: false
+  role: 'USER' as 'USER' | 'ADMIN'
 };
 
 export function UsersPage() {
@@ -72,7 +72,7 @@ export function UsersPage() {
       email: user.email,
       displayName: user.displayName,
       password: '',
-      admin: user.admin
+      role: user.role
     });
   }
 
@@ -105,7 +105,7 @@ export function UsersPage() {
         email: editForm.email,
         displayName: editForm.displayName,
         password: editForm.password || undefined,
-        admin: editForm.admin
+        role: editForm.role
       });
       setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       setNotice(`${updated.email} was updated.`);
@@ -182,8 +182,8 @@ export function UsersPage() {
                   <td>{user.displayName}</td>
                   <td>{user.email}</td>
                   <td>
-                    <span className={user.admin ? 'role-badge admin' : 'role-badge'}>
-                      {user.admin ? 'Admin' : 'User'}
+                    <span className={user.role === 'ADMIN' ? 'role-badge admin' : 'role-badge'}>
+                      {user.role === 'ADMIN' ? 'Admin' : 'User'}
                     </span>
                   </td>
                   <td>{formatDateTime(user.createdAt)}</td>
@@ -240,15 +240,20 @@ export function UsersPage() {
                   minLength={8}
                 />
               </FormField>
-              <label className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={editForm.admin}
+              <FormField label="Role" htmlFor="edit-user-role">
+                <select
+                  id="edit-user-role"
+                  className="text-input"
+                  value={editForm.role}
                   disabled={editingOwnAccount}
-                  onChange={(event) => setEditForm((current) => ({ ...current, admin: event.target.checked }))}
-                />
-                <span>Admin</span>
-              </label>
+                  onChange={(event) =>
+                    setEditForm((current) => ({ ...current, role: event.target.value as 'USER' | 'ADMIN' }))
+                  }
+                >
+                  <option value="USER">User</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </FormField>
               <div className="inline-actions end">
                 <Button type="button" variant="secondary" disabled={savingEdit} onClick={closeEditModal}>
                   Cancel

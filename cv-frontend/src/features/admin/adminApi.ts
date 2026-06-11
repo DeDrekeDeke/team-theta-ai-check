@@ -10,6 +10,7 @@ export type AdminUser = {
   id: number;
   email: string;
   displayName: string;
+  role: 'USER' | 'ADMIN';
   admin: boolean;
   createdAt: string;
 };
@@ -24,7 +25,7 @@ export type UserUpdateRequest = {
   email: string;
   displayName: string;
   password?: string;
-  admin: boolean;
+  role: 'USER' | 'ADMIN';
 };
 
 export function listSettings() {

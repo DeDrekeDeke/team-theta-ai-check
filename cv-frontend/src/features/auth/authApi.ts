@@ -9,6 +9,7 @@ export type LoginResponse = {
   userId: number;
   email: string;
   displayName: string;
+  role: 'USER' | 'ADMIN';
   admin: boolean;
   token: string;
 };

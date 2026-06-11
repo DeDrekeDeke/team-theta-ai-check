@@ -6,6 +6,7 @@ import com.example.cvmanager.user.dto.UserCreateRequest;
 import com.example.cvmanager.user.dto.UserResponse;
 import com.example.cvmanager.user.dto.UserUpdateRequest;
 import com.example.cvmanager.user.model.UserAccount;
+import com.example.cvmanager.user.model.UserRole;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.List;
 import java.util.Locale;
@@ -97,15 +98,16 @@ public class UserService {
 
         String email = normalizeEmail(request.email());
         ensureEmailAvailable(email, id);
-        ensureNotDemotingSelf(user, request.admin(), currentUserId);
-        ensureAnAdminRemains(user, request.admin());
+        UserRole requestedRole = UserRole.valueOf(request.role());
+        ensureNotDemotingSelf(user, requestedRole, currentUserId);
+        ensureAnAdminRemains(user, requestedRole);
 
         user.setEmail(email);
         user.setDisplayName(request.displayName().trim());
         if (request.password() != null) {
             user.setPassword(passwordEncoder.encode(request.password()));
         }
-        user.setAdmin(request.admin());
+        user.setRole(requestedRole);
         return toResponse(userRepository.save(user));
     }
 
@@ -117,14 +119,14 @@ public class UserService {
                 });
     }
 
-    private void ensureAnAdminRemains(UserAccount user, boolean requestedAdmin) {
-        if (user.isAdmin() && !requestedAdmin && userRepository.countByAdminTrue() <= 1) {
+    private void ensureAnAdminRemains(UserAccount user, UserRole requestedRole) {
+        if (user.isAdmin() && requestedRole != UserRole.ADMIN && userRepository.countByRole(UserRole.ADMIN) <= 1) {
             throw new BadRequestException("At least one admin user is required", "USER_LAST_ADMIN");
         }
     }
 
-    private void ensureNotDemotingSelf(UserAccount user, boolean requestedAdmin, Long currentUserId) {
-        if (currentUserId != null && user.getId().equals(currentUserId) && user.isAdmin() && !requestedAdmin) {
+    private void ensureNotDemotingSelf(UserAccount user, UserRole requestedRole, Long currentUserId) {
+        if (currentUserId != null && user.getId().equals(currentUserId) && user.isAdmin() && requestedRole != UserRole.ADMIN) {
             throw new BadRequestException("Admins cannot remove their own admin access", "USER_SELF_DEMOTION");
         }
     }
@@ -138,6 +140,7 @@ public class UserService {
                 user.getId(),
                 user.getEmail(),
                 user.getDisplayName(),
+                user.getRole().name(),
                 user.isAdmin(),
                 user.getCreatedAt());
     }

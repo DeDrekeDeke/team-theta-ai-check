@@ -6,6 +6,7 @@ public record UserResponse(
         Long id,
         String email,
         String displayName,
+        String role,
         boolean admin,
         LocalDateTime createdAt) {
 }

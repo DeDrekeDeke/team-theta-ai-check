@@ -4,5 +4,9 @@ public record AuthenticatedUser(
         Long userId,
         String email,
         String displayName,
-        boolean admin) {
+        String role) {
+
+    public boolean admin() {
+        return "ADMIN".equals(role);
+    }
 }
