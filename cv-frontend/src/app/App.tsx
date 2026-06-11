@@ -1,16 +1,32 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
+import { logoutRequest } from '../features/auth/authApi';
 
-const navItems = [
+type NavItem = {
+  to: string;
+  label: string;
+};
+
+const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
   { to: '/upload', label: 'Upload' },
+  { to: '/admin/users', label: 'Users' },
   { to: '/admin/settings', label: 'Settings' }
 ];
 
+function isAdminRoute(path: string) {
+  return path === '/admin' || path.startsWith('/admin/');
+}
+
 export function App() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
+  const isLoginPage = location.pathname === '/login';
+  const visibleNavItems = isLoginPage
+    ? []
+    : navItems.filter((item) => !isAdminRoute(item.to) || user?.admin);
 
   useEffect(() => {
     function handleAuthChanged() {
@@ -26,9 +42,15 @@ export function App() {
     };
   }, []);
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
+  async function handleLogout() {
+    try {
+      await logoutRequest();
+    } catch {
+      // Clear local auth state even if the token is already expired.
+    } finally {
+      logout();
+      navigate('/login', { replace: true });
+    }
   }
 
   return (
@@ -40,7 +62,7 @@ export function App() {
         </div>
 
         <nav className="nav-list" aria-label="Main navigation">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -52,7 +74,11 @@ export function App() {
         </nav>
 
         <div className="sidebar-footer">
-          {user ? (
+          {isLoginPage ? (
+            <NavLink to="/login" className="nav-link">
+              Log in
+            </NavLink>
+          ) : user ? (
             <>
               <span>{user.email}</span>
               <button className="link-button" type="button" onClick={handleLogout}>

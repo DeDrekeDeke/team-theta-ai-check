@@ -1,5 +1,5 @@
-import { apiRequest, API_BASE_URL } from '../../app/apiClient';
-import { getAuthToken } from '../auth/authStore';
+import { apiRequest, API_BASE_URL, readErrorMessage } from '../../app/apiClient';
+import { getAuthToken, logout } from '../auth/authStore';
 
 export type Cv = {
   id: number;
@@ -9,6 +9,7 @@ export type Cv = {
   uploadedHtmlFilePath: string;
   createdAt: string;
   updatedAt: string;
+  archivedAt: string | null;
 };
 
 export function listCvs() {
@@ -34,7 +35,13 @@ export async function getCvHtml(id: number | string) {
   });
 
   if (!response.ok) {
-    throw new Error(`Could not load uploaded HTML: ${response.status}`);
+    const message = await readErrorMessage(response);
+
+    if (response.status === 401) {
+      logout(message);
+    }
+
+    throw new Error(message);
   }
 
   return response.text();
@@ -44,5 +51,23 @@ export function uploadCv(formData: FormData) {
   return apiRequest<Cv>('/api/cvs/upload', {
     method: 'POST',
     body: formData
+  });
+}
+
+export type CvUpdateRequest = {
+  title: string;
+  uploadedHtmlFilePath: string;
+};
+
+export function updateCv(id: number | string, request: CvUpdateRequest) {
+  return apiRequest<Cv>(`/api/cvs/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(request)
+  });
+}
+
+export function archiveCv(id: number | string) {
+  return apiRequest<void>(`/api/cvs/${id}`, {
+    method: 'DELETE'
   });
 }

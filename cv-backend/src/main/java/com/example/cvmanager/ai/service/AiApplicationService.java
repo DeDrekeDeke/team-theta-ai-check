@@ -4,6 +4,7 @@ import com.example.cvmanager.ai.dto.AiSuggestionResponse;
 import com.example.cvmanager.ai.model.AiActionType;
 import com.example.cvmanager.ai.model.AiSuggestion;
 import com.example.cvmanager.ai.repository.AiSuggestionRepository;
+import com.example.cvmanager.auth.security.AuthenticatedUser;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.service.CvService;
 import java.util.List;
@@ -27,9 +28,9 @@ public class AiApplicationService {
     }
 
     @Transactional
-    public AiSuggestionResponse improveSummary(Long cvId) {
-        Cv cv = cvService.findCv(cvId);
-        String source = cvService.getUploadedHtml(cvId);
+    public AiSuggestionResponse improveSummary(AuthenticatedUser user, Long cvId) {
+        Cv cv = cvService.findAuthorizedCv(user, cvId);
+        String source = cvService.getUploadedHtml(user, cvId);
         String suggestedText = aiService.suggest(AiActionType.IMPROVE_SUMMARY, source);
 
         AiSuggestion suggestion = new AiSuggestion(
@@ -43,7 +44,8 @@ public class AiApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<AiSuggestionResponse> listSuggestions(Long cvId) {
+    public List<AiSuggestionResponse> listSuggestions(AuthenticatedUser user, Long cvId) {
+        cvService.findAuthorizedCv(user, cvId);
         return aiSuggestionRepository.findByCvIdOrderByCreatedAtDesc(cvId).stream()
                 .map(this::toResponse)
                 .toList();

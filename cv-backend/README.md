@@ -24,6 +24,20 @@ cd cv-backend
 .\gradlew.bat bootRun
 ```
 
+Run tests:
+
+```bash
+cd cv-backend
+./gradlew test
+```
+
+On Windows PowerShell:
+
+```powershell
+cd cv-backend
+.\gradlew.bat test
+```
+
 The project targets Java 21 and includes a project-local Gradle wrapper.
 
 The backend runs at:
@@ -52,6 +66,19 @@ Content-Type: application/json
 }
 ```
 
+Use the returned `token` value as a bearer token for authenticated requests:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+Logout:
+
+```http
+POST /api/auth/logout
+Authorization: Bearer <access-token>
+```
+
 CV endpoints:
 
 ```text
@@ -77,8 +104,29 @@ Admin/settings endpoints:
 ```text
 GET /api/admin/settings
 PUT /api/admin/settings/{key}
-GET /api/users
-GET /api/users/{id}
+```
+
+Admin/user endpoints:
+
+```text
+GET  /api/users
+GET  /api/users/{id}
+POST /api/users
+PUT  /api/users/{id}
+```
+
+User creation:
+
+```http
+POST /api/users
+Authorization: Bearer <admin-access-token>
+Content-Type: application/json
+
+{
+  "email": "carol@example.com",
+  "displayName": "Carol Candidate",
+  "password": "carol123"
+}
 ```
 
 AI placeholder endpoints:
@@ -95,3 +143,19 @@ SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/cvmanager
 SPRING_DATASOURCE_USERNAME=cvmanager
 SPRING_DATASOURCE_PASSWORD=cvmanager
 ```
+
+## Password Notes
+
+- Demo users are seeded in `src/main/resources/db/migration/V2__seed_data.sql`.
+- `src/main/resources/db/migration/V3__migrate_demo_user_password_hashes.sql` migrates those seeded plain-text passwords to BCrypt hashes and keeps the same demo credentials usable after migration.
+- New users created via `POST /api/users` are stored with BCrypt-hashed passwords.
+- Login verifies the submitted password against the stored hash.
+- User and login responses do not expose plain-text passwords or password hashes.
+
+## Authentication Notes
+
+- The backend uses stateless JWT access tokens with a 15-minute TTL.
+- `POST /api/auth/logout` returns `204 No Content` for an authenticated caller, but it does not revoke issued JWTs server-side.
+- Logout security relies on the frontend discarding its in-memory token and on access-token expiry.
+- This avoids long-lived browser persistence, but a full page reload requires the user to log in again because the frontend does not persist the token.
+- Set `APP_AUTH_SECRET` outside local development. The default secret is only for running the starter application locally.

@@ -9,6 +9,7 @@ export type LoginResponse = {
   userId: number;
   email: string;
   displayName: string;
+  role: 'USER' | 'ADMIN';
   admin: boolean;
   token: string;
 };
@@ -17,5 +18,11 @@ export function login(request: LoginRequest) {
   return apiRequest<LoginResponse>('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify(request)
+  });
+}
+
+export function logoutRequest() {
+  return apiRequest<void>('/api/auth/logout', {
+    method: 'POST'
   });
 }
