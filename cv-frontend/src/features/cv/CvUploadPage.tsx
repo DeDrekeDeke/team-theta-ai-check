@@ -4,6 +4,13 @@ import { Button } from '../../components/Button';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { FormField, TextInput } from '../../components/FormField';
 import { PageHeader } from '../../components/PageHeader';
+import {
+  compactErrors,
+  MAX_TITLE_LENGTH,
+  validateHtmlFile,
+  validateOptionalTitle,
+  validateOwnerUserId
+} from '../../lib/validation';
 import { getCurrentUser } from '../auth/authStore';
 import { createCv } from './cvApi';
 
@@ -49,7 +56,12 @@ export function CvUploadPage() {
       <PageHeader title="Create CV" description="Create a structured CV without uploading HTML." />
       <form className="form-stack" onSubmit={handleSubmit}>
         <FormField label="Title" htmlFor="title">
-          <TextInput id="title" value={title} onChange={(event) => setTitle(event.target.value)} />
+          <TextInput
+            id="title"
+            maxLength={MAX_TITLE_LENGTH}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
         </FormField>
         <label className="form-field" htmlFor="summary">
           <span>Summary</span>

@@ -5,6 +5,7 @@ import { ErrorMessage } from '../../components/ErrorMessage';
 import { FormField, TextInput } from '../../components/FormField';
 import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
+import { MAX_TITLE_LENGTH, validateRequiredTitle } from '../../lib/validation';
 import { AiActionPanel } from '../ai/AiActionPanel';
 import { getCurrentUser } from '../auth/authStore';
 import { archiveCv, Cv, getCv, updateCv } from './cvApi';
@@ -97,9 +98,15 @@ export function CvDetailPage() {
     <section className="page-section">
       <PageHeader title={cv.title} description={`Owner: ${cv.ownerEmail}`} />
 
-      <form className="form-stack" onSubmit={handleSave}>
+      <form className="form-stack" onSubmit={handleSave} noValidate>
         <FormField label="Title" htmlFor="title">
-          <TextInput id="title" value={title} onChange={(event) => setTitle(event.target.value)} />
+          <TextInput
+            id="title"
+            required
+            maxLength={MAX_TITLE_LENGTH}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
         </FormField>
         <label className="form-field" htmlFor="summary">
           <span>Summary</span>

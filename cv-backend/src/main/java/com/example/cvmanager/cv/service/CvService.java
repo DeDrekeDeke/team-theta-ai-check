@@ -11,6 +11,8 @@ import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,14 @@ public class CvService {
     private final CvRepository cvRepository;
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
+
+    private static final int MAX_TITLE_LENGTH = 255;
+    private static final long MAX_HTML_UPLOAD_BYTES = 1_000_000;
+    private static final Pattern UNSAFE_HTML_PATTERN = Pattern.compile(
+            "(?is)<\\s*(script|iframe|object|embed|base|form|input|button|textarea|select|option|meta|link)\\b"
+                    + "|\\son[a-z0-9_-]+\\s*="
+                    + "|\\ssrcdoc\\s*="
+                    + "|(?:href|src|xlink:href)\\s*=\\s*(['\"]?)\\s*(javascript:|data:text/html|vbscript:)");
 
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs() {
