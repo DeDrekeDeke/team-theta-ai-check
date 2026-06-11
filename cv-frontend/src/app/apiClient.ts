@@ -30,7 +30,6 @@ function formatValidationDetail(detail: string) {
 export async function readErrorMessage(response: Response) {
   const fallback = `Request failed with status ${response.status}`;
   const text = await response.text();
-
   if (!text) {
     return fallback;
   }

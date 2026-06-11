@@ -3,9 +3,16 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
 import { logoutRequest } from '../features/auth/authApi';
 
-const navItems = [
+type NavItem = {
+  to: string;
+  label: string;
+  adminOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
   { to: '/upload', label: 'Upload' },
+  { to: '/admin/users', label: 'Users', adminOnly: true },
   { to: '/admin/settings', label: 'Settings' }
 ];
 
@@ -20,9 +27,11 @@ export function App() {
     }
 
     window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+    window.addEventListener('storage', handleAuthChanged);
 
     return () => {
       window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+      window.removeEventListener('storage', handleAuthChanged);
     };
   }, []);
 
