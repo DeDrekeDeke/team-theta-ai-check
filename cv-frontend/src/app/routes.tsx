@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import {createBrowserRouter, createHashRouter} from 'react-router-dom';
 import { App } from './App';
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute';
 import { LoginPage } from '../features/auth/LoginPage';
@@ -10,7 +10,7 @@ import { CvListPage } from '../features/cv/CvListPage';
 import { SettingsPage } from '../features/admin/SettingsPage';
 import { UsersPage } from '../features/admin/UsersPage';
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: <App />,
