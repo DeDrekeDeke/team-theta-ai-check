@@ -3,6 +3,7 @@ package com.example.cvmanager.auth.controller;
 import com.example.cvmanager.auth.dto.LoginRequest;
 import com.example.cvmanager.auth.dto.LoginResponse;
 import com.example.cvmanager.auth.service.AuthService;
+import com.example.cvmanager.user.dto.UserCreateRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,11 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/register")
+    public LoginResponse register(@Valid @RequestBody UserCreateRequest request) {
+        return authService.register(request);
     }
 
     @PostMapping("/logout")

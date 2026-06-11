@@ -75,9 +75,14 @@ export function App() {
               </button>
             </>
           ) : (
-            <NavLink to="/login" className="nav-link">
-              Log in
-            </NavLink>
+            <>
+              <NavLink to="/login" className="nav-link">
+                Log in
+              </NavLink>
+              <NavLink to="/register" className="nav-link">
+                Register
+              </NavLink>
+            </>
           )}
         </div>
       </aside>

@@ -83,9 +83,14 @@ export function LoginPage() {
           />
         </FormField>
         {error ? <ErrorMessage message={error} /> : null}
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Log in'}
-        </Button>
+        <div className="form-actions">
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Logging in...' : 'Log in'}
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => navigate('/register')}>
+            Register
+          </Button>
+        </div>
       </form>
     </section>
   );
