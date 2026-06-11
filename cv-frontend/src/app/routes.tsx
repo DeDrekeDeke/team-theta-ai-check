@@ -21,22 +21,8 @@ export const router = createBrowserRouter([
       { path: 'create', element: <ProtectedRoute><CvCreatePage /></ProtectedRoute> },
       { path: 'cvs/:id/edit', element: <ProtectedRoute><CvEditPage /></ProtectedRoute> },
       { path: 'cvs/:id', element: <ProtectedRoute><CvDetailPage /></ProtectedRoute> },
-      {
-        path: 'admin/users',
-        element: (
-          <ProtectedRoute requireAdmin>
-            <UsersPage />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: 'admin/settings',
-        element: (
-          <ProtectedRoute requireAdmin>
-            <SettingsPage />
-          </ProtectedRoute>
-        )
-      }
+      { path: 'admin/users', element: <ProtectedRoute requireAdmin><UsersPage /></ProtectedRoute>},
+      { path: 'admin/settings', element: <ProtectedRoute requireAdmin><SettingsPage /></ProtectedRoute> }
     ]
   }
 ]);

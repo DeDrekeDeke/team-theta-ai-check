@@ -1,25 +1,34 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { AUTH_CHANGED_EVENT, getCurrentUser, isAdminUser, logout } from '../features/auth/authStore';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { APP_CONFIG_CHANGED_EVENT, DEFAULT_APP_CONFIG, getAppConfig } from './appConfig';
+import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
 import { logoutRequest } from '../features/auth/authApi';
 
 type NavItem = {
   to: string;
   label: string;
-  adminOnly?: boolean;
 };
 
 const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
   { to: '/create', label: 'Create' },
-  { to: '/admin/users', label: 'Users', adminOnly: true },
-  { to: '/admin/settings', label: 'Settings', adminOnly: true }
+  { to: '/admin/users', label: 'Users'},
+  { to: '/admin/settings', label: 'Settings'}
 ];
 
+function isAdminRoute(path: string) {
+  return path === '/admin' || path.startsWith('/admin/');
+}
+
 export function App() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
-  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdminUser(user));
+  const [appConfig, setAppConfig] = useState(DEFAULT_APP_CONFIG);
+  const isLoginPage = location.pathname === '/login';
+  const visibleNavItems = isLoginPage
+    ? []
+    : navItems.filter((item) => !isAdminRoute(item.to) || user?.admin);
 
   useEffect(() => {
     function handleAuthChanged() {
@@ -32,6 +41,34 @@ export function App() {
     return () => {
       window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
       window.removeEventListener('storage', handleAuthChanged);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    function loadAppConfig() {
+      getAppConfig()
+        .then((config) => {
+          if (active) {
+            setAppConfig(config);
+            document.title = config.applicationDisplayName;
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setAppConfig(DEFAULT_APP_CONFIG);
+            document.title = DEFAULT_APP_CONFIG.applicationDisplayName;
+          }
+        });
+    }
+
+    loadAppConfig();
+    window.addEventListener(APP_CONFIG_CHANGED_EVENT, loadAppConfig);
+
+    return () => {
+      active = false;
+      window.removeEventListener(APP_CONFIG_CHANGED_EVENT, loadAppConfig);
     };
   }, []);
 
@@ -51,7 +88,7 @@ export function App() {
       <aside className="sidebar">
         <div>
           <p className="eyebrow">Summer School</p>
-          <h1>CV Manager</h1>
+          <h1>{appConfig.applicationDisplayName}</h1>
         </div>
 
         <nav className="nav-list" aria-label="Main navigation">
@@ -67,7 +104,11 @@ export function App() {
         </nav>
 
         <div className="sidebar-footer">
-          {user ? (
+          {isLoginPage ? (
+            <NavLink to="/login" className="nav-link">
+              Log in
+            </NavLink>
+          ) : user ? (
             <>
               <span>{user.email}</span>
               <button className="link-button" type="button" onClick={handleLogout}>

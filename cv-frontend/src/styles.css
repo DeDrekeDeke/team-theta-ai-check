@@ -380,6 +380,57 @@ tr:last-child td {
   color: #33404a;
 }
 
+.settings-list {
+  display: grid;
+  padding: 0;
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
+  gap: 20px;
+  padding: 18px;
+  border-bottom: 1px solid #edf1f4;
+}
+
+.setting-row:last-child {
+  border-bottom: 0;
+}
+
+.setting-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.setting-copy h3,
+.setting-copy p {
+  margin: 0;
+}
+
+.setting-copy h3 {
+  font-size: 18px;
+}
+
+.setting-copy p {
+  color: #65717c;
+}
+
+.setting-copy code {
+  width: fit-content;
+  padding: 2px 6px;
+  border: 1px solid #d9dee3;
+  border-radius: 4px;
+  background: #f6f7f8;
+  color: #33404a;
+  font-size: 13px;
+}
+
+.setting-control {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
 .error-message {
   margin: 0;
   padding: 10px 12px;
@@ -447,6 +498,7 @@ tr:last-child td {
 
   .toolbar,
   .form-grid,
+  .setting-row,
   .detail-grid {
     grid-template-columns: 1fr;
   }

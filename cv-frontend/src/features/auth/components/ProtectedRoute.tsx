@@ -1,21 +1,32 @@
-import { ReactNode } from 'react';
+import { PropsWithChildren, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { getCurrentUser, isAdminUser } from '../authStore';
+import { AUTH_CHANGED_EVENT, getCurrentUser } from '../authStore';
 
-type ProtectedRouteProps = {
-  children: ReactNode;
+type ProtectedRouteProps = PropsWithChildren<{
   requireAdmin?: boolean;
-};
+}>;
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const location = useLocation();
-  const user = getCurrentUser();
+  const [user, setUser] = useState(getCurrentUser());
+
+  useEffect(() => {
+    function handleAuthChanged() {
+      setUser(getCurrentUser());
+    }
+
+    window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+
+    return () => {
+      window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+    };
+  }, []);
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (requireAdmin && !isAdminUser(user)) {
+  if (requireAdmin && !user.admin) {
     return <Navigate to="/" replace />;
   }
 
