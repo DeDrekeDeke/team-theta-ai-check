@@ -32,8 +32,7 @@ public class Cv {
 //    @Setter
 //    private String uploadedHtmlFilePath;
 
-    @Lob
-    @Column(name = "summary")
+    @Column(name = "summary", columnDefinition = "text")
     @Setter
     private String summary;
 
