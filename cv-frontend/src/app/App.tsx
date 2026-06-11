@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { APP_CONFIG_CHANGED_EVENT, DEFAULT_APP_CONFIG, getAppConfig } from './appConfig';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
 import { logoutRequest } from '../features/auth/authApi';
 
@@ -23,6 +24,7 @@ export function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
+  const [appConfig, setAppConfig] = useState(DEFAULT_APP_CONFIG);
   const isLoginPage = location.pathname === '/login';
   const visibleNavItems = isLoginPage
     ? []
@@ -42,6 +44,34 @@ export function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+
+    function loadAppConfig() {
+      getAppConfig()
+        .then((config) => {
+          if (active) {
+            setAppConfig(config);
+            document.title = config.applicationDisplayName;
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setAppConfig(DEFAULT_APP_CONFIG);
+            document.title = DEFAULT_APP_CONFIG.applicationDisplayName;
+          }
+        });
+    }
+
+    loadAppConfig();
+    window.addEventListener(APP_CONFIG_CHANGED_EVENT, loadAppConfig);
+
+    return () => {
+      active = false;
+      window.removeEventListener(APP_CONFIG_CHANGED_EVENT, loadAppConfig);
+    };
+  }, []);
+
   async function handleLogout() {
     try {
       await logoutRequest();
@@ -58,7 +88,7 @@ export function App() {
       <aside className="sidebar">
         <div>
           <p className="eyebrow">Summer School</p>
-          <h1>CV Manager</h1>
+          <h1>{appConfig.applicationDisplayName}</h1>
         </div>
 
         <nav className="nav-list" aria-label="Main navigation">
