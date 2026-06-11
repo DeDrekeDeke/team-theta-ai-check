@@ -15,11 +15,14 @@ import { getCurrentUser } from '../auth/authStore';
 import { createCv } from './cvApi';
 
 export function CvUploadPage() {
+  const user = getCurrentUser();
   const navigate = useNavigate();
+  const [ownerUserId, setOwnerUserId] = useState(user ? String(user.userId) : '');
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const canChooseOwner = user?.admin ?? false;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -1,9 +1,12 @@
 package com.example.cvmanager.cv.service;
 
+import com.example.cvmanager.auth.security.AuthenticatedUser;
+import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.cv.dto.request.CvCreateRequest;
 import com.example.cvmanager.cv.dto.response.CvResponse;
 import com.example.cvmanager.cv.dto.request.CvUpdateRequest;
+import com.example.cvmanager.common.security.AdminAccessService;
 import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.repository.CvRepository;
@@ -24,6 +27,8 @@ public class CvService {
     private final CvRepository cvRepository;
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
+    //private final CvStorageProperties storageProperties;
+    private final AdminAccessService adminAccessService;
 
     private static final int MAX_TITLE_LENGTH = 255;
     private static final long MAX_HTML_UPLOAD_BYTES = 1_000_000;
@@ -34,37 +39,39 @@ public class CvService {
                     + "|(?:href|src|xlink:href)\\s*=\\s*(['\"]?)\\s*(javascript:|data:text/html|vbscript:)");
 
     @Transactional(readOnly = true)
-    public List<CvResponse> listCvs() {
-        return cvRepository.findByArchivedAtIsNull(updatedAtDescending()).stream()
+    public List<CvResponse> listCvs(AuthenticatedUser user) {
+        return visibleCvs(user).stream()
                 .map(cvMapper::toResponse)
                 .toList();
     }
 
     @Transactional
-    public void archiveCv(Long id) {
-        Cv cv = findCv(id);
+    public void archiveCv(AuthenticatedUser user, Long id) {
+        Cv cv = findAuthorizedCv(user, id);
         cv.archive();
         cvRepository.save(cv);
     }
 
     @Transactional(readOnly = true)
-    public CvResponse getCv(Long id) {
-        return cvMapper.toResponse(findCv(id));
+    public CvResponse getCv(AuthenticatedUser user, Long id) {
+        return cvMapper.toResponse(findAuthorizedCv(user, id));
     }
 
     @Transactional(readOnly = true)
-    public List<CvResponse> searchCvs(String q) {
+    public List<CvResponse> searchCvs(AuthenticatedUser user, String q) {
         if (q == null || q.isBlank()) {
-            return listCvs();
+            return listCvs(user);
         }
 
-        return cvRepository.search(q.trim()).stream()
+        return visibleCvs(user).stream()
+                .filter(cv -> matchesSearch(cv, q.trim()))
                 .map(cvMapper::toResponse)
                 .toList();
     }
 
     @Transactional
-    public CvResponse createCv(CvCreateRequest request) {
+    public CvResponse createCv(AuthenticatedUser user, CvCreateRequest request) {
+        adminAccessService.requireOwnerOrAdmin(user, request.ownerUserId());
         var owner = userRepository.findById(request.ownerUserId())
                 .orElseThrow(() -> new NotFoundException("Owner user not found", "USER_NOT_FOUND"));
 
@@ -74,8 +81,8 @@ public class CvService {
     }
 
     @Transactional
-    public CvResponse updateCv(Long id, CvUpdateRequest request) {
-        Cv cv = findCv(id);
+    public CvResponse updateCv(AuthenticatedUser user, Long id, CvUpdateRequest request) {
+        Cv cv = findAuthorizedCv(user, id);
         cv.setTitle(request.title());
         cv.setSummary(request.summary());
         return cvMapper.toResponse(cvRepository.save(cv));
@@ -111,12 +118,45 @@ public class CvService {
                 .orElseThrow(() -> new NotFoundException("CV not found", "CV_NOT_FOUND"));
     }
 
+    @Transactional(readOnly = true)
+    public Cv findAuthorizedCv(AuthenticatedUser user, Long id) {
+        Cv cv = findCv(id);
+        adminAccessService.requireOwnerOrAdmin(user, cv.getOwner().getId());
+        return cv;
+    }
+
     private String normalizeLegacyText(String value) {
         return value.replace("\r\n", "\n").replace("\r", "\n").trim();
     }
 
     private Sort updatedAtDescending() {
         return Sort.by(Sort.Direction.DESC, "updatedAt");
+    }
+
+    private List<Cv> visibleCvs(AuthenticatedUser user) {
+        if (user.admin()) {
+            return cvRepository.findByArchivedAtIsNull(updatedAtDescending());
+        }
+        return cvRepository.findByOwnerId(user.userId()).stream()
+                .filter(cv -> !cv.isArchived())
+                .toList();
+    }
+
+    private boolean matchesSearch(Cv cv, String query) {
+        String loweredQuery = query.toLowerCase(Locale.ROOT);
+        return containsIgnoreCase(cv.getTitle(), loweredQuery)
+                || containsIgnoreCase(cv.getOwner().getEmail(), loweredQuery)
+                || containsIgnoreCase(cv.getUploadedHtmlFilePath(), loweredQuery);
+    }
+
+    private boolean containsIgnoreCase(String value, String loweredQuery) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(loweredQuery);
+    }
+
+    private void rejectUnsafeHtml(String html) {
+        if (UNSAFE_HTML_PATTERN.matcher(html).find()) {
+            throw new BadRequestException("HTML file contains unsafe content", "CV_FILE_UNSAFE");
+        }
     }
 
     private String removeLegacyHeader(String value) {

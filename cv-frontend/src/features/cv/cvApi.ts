@@ -1,6 +1,8 @@
 // import { apiRequest, API_BASE_URL, readErrorMessage } from '../../app/apiClient';
 // import { getAuthToken } from '../auth/authStore';
-import { apiRequest } from '../../app/apiClient';
+// import { apiRequest } from '../../app/apiClient';
+import { apiRequest, API_BASE_URL, readErrorMessage } from '../../app/apiClient';
+import { getAuthToken, logout } from '../auth/authStore';
 
 export type Cv = {
   id: number;

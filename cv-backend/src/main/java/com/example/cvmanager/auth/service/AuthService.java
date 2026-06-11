@@ -1,10 +1,10 @@
 package com.example.cvmanager.auth.service;
 
-import com.example.cvmanager.admin.service.AdminProperties;
 import com.example.cvmanager.auth.dto.LoginRequest;
 import com.example.cvmanager.auth.dto.LoginResponse;
+import com.example.cvmanager.admin.service.AdminProperties;
+import com.example.cvmanager.auth.security.JwtService;
 import com.example.cvmanager.common.exception.BadRequestException;
-import com.example.cvmanager.common.security.AsIsSecurityProperties;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.Locale;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,19 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final AsIsSecurityProperties securityProperties;
     private final AdminProperties adminProperties;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthService(
             UserRepository userRepository,
-            AsIsSecurityProperties securityProperties,
             AdminProperties adminProperties,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
         this.userRepository = userRepository;
-        this.securityProperties = securityProperties;
         this.adminProperties = adminProperties;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional(readOnly = true)
@@ -41,8 +41,8 @@ public class AuthService {
             throw new BadRequestException("Invalid email or password", "AUTH_INVALID");
         }
 
-        String token = securityProperties.demoTokenPrefix() + "-" + user.getId();
         boolean admin = user.isAdmin() || adminProperties.email().equalsIgnoreCase(user.getEmail());
+        String token = jwtService.createAccessToken(user, admin);
         return new LoginResponse(user.getId(), user.getEmail(), user.getDisplayName(), admin, token);
     }
 }

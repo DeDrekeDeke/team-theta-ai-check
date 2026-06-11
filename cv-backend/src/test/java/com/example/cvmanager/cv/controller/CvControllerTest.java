@@ -7,11 +7,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.cvmanager.auth.security.SecurityConfig;
+import com.example.cvmanager.auth.security.JwtService;
 import com.example.cvmanager.common.exception.GlobalExceptionHandler;
 import com.example.cvmanager.cv.service.CvService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -19,7 +20,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(CvController.class)
-@Import({GlobalExceptionHandler.class, SecurityConfig.class})
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 class CvControllerTest {
 
     @Autowired
@@ -27,6 +29,9 @@ class CvControllerTest {
 
     @MockitoBean
     private CvService cvService;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     @Test
     void createCvRejectsBlankTitle() throws Exception {
