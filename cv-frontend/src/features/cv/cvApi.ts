@@ -1,5 +1,5 @@
 import { apiRequest, API_BASE_URL, readErrorMessage } from '../../app/apiClient';
-import { getAuthToken } from '../auth/authStore';
+import { getAuthToken, logout } from '../auth/authStore';
 
 export type Cv = {
   id: number;
@@ -35,7 +35,13 @@ export async function getCvHtml(id: number | string) {
   });
 
   if (!response.ok) {
-    throw new Error(await readErrorMessage(response));
+    const message = await readErrorMessage(response);
+
+    if (response.status === 401) {
+      logout(message);
+    }
+
+    throw new Error(message);
   }
 
   return response.text();

@@ -1,4 +1,4 @@
-import { getAuthToken } from "../features/auth/authStore";
+import { getAuthToken, logout } from '../features/auth/authStore';
 
 type ApiErrorResponse = {
   message?: string;
@@ -69,7 +69,13 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    throw new Error(await readErrorMessage(response));
+    const message = await readErrorMessage(response);
+
+    if (response.status === 401) {
+      logout(message);
+    }
+
+    throw new Error(message);
   }
 
   if (response.status === 204) {

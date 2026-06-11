@@ -1,19 +1,32 @@
-import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { FormEvent, useEffect, useState } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { FormField, TextInput } from '../../components/FormField';
 import { PageHeader } from '../../components/PageHeader';
 import { compactErrors, validateEmail, validatePassword } from '../../lib/validation';
 import { login } from './authApi';
-import { saveCurrentUser } from './authStore';
+import { consumeAuthMessage, getCurrentUser, saveCurrentUser } from './authStore';
 
 export function LoginPage() {
+  const currentUser = getCurrentUser();
+  const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('alice@example.com');
   const [password, setPassword] = useState('user123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const message = consumeAuthMessage();
+    if (message) {
+      setError(message);
+    }
+  }, []);
+
+  if (currentUser) {
+    return <Navigate to="/" replace />;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,7 +46,10 @@ export function LoginPage() {
     try {
       const user = await login({ email, password });
       saveCurrentUser(user);
-      navigate('/');
+      const redirectTo = typeof location.state === 'object' && location.state && 'from' in location.state
+        ? String(location.state.from)
+        : '/';
+      navigate(redirectTo, { replace: true });
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'Login failed');
     } finally {

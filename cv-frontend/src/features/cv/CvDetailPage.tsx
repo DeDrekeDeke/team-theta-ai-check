@@ -8,7 +8,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { MAX_TITLE_LENGTH, validateRequiredTitle } from '../../lib/validation';
 import { AiActionPanel } from '../ai/AiActionPanel';
 import { getCurrentUser } from '../auth/authStore';
-import { archiveCv, Cv, getCv, getCvHtml, getCvHtmlUrl, updateCv } from './cvApi';
+import { archiveCv, Cv, getCv, getCvHtml, updateCv } from './cvApi';
 
 export function CvDetailPage() {
   const { id } = useParams();
@@ -20,6 +20,7 @@ export function CvDetailPage() {
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [openingHtml, setOpeningHtml] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -93,6 +94,19 @@ export function CvDetailPage() {
     }
   }
 
+  function handleOpenRawHtml() {
+    setOpeningHtml(true);
+
+    try {
+      const blob = new Blob([html], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } finally {
+      setOpeningHtml(false);
+    }
+  }
+
   if (loadError) {
     return <ErrorMessage message={loadError} />;
   }
@@ -132,9 +146,9 @@ export function CvDetailPage() {
         <div className="panel">
           <div className="panel-header">
             <h3>Uploaded HTML Content</h3>
-            <a className="button secondary" href={getCvHtmlUrl(cv.id)} target="_blank" rel="noreferrer">
-              Open raw HTML
-            </a>
+            <Button type="button" variant="secondary" onClick={handleOpenRawHtml} disabled={openingHtml}>
+              {openingHtml ? 'Opening...' : 'Open raw HTML'}
+            </Button>
           </div>
           <iframe
             className="html-preview-frame"

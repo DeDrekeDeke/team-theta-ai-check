@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
+import { logoutRequest } from '../features/auth/authApi';
 
 const navItems = [
   { to: '/', label: 'CVs' },
@@ -11,6 +12,7 @@ const navItems = [
 export function App() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
+  const visibleNavItems = navItems.filter((item) => item.to !== '/admin/settings' || user?.admin);
 
   useEffect(() => {
     function handleAuthChanged() {
@@ -18,17 +20,21 @@ export function App() {
     }
 
     window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
-    window.addEventListener('storage', handleAuthChanged);
 
     return () => {
       window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
-      window.removeEventListener('storage', handleAuthChanged);
     };
   }, []);
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
+  async function handleLogout() {
+    try {
+      await logoutRequest();
+    } catch {
+      // Clear local auth state even if the token is already expired.
+    } finally {
+      logout();
+      navigate('/login', { replace: true });
+    }
   }
 
   return (
@@ -40,7 +46,7 @@ export function App() {
         </div>
 
         <nav className="nav-list" aria-label="Main navigation">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

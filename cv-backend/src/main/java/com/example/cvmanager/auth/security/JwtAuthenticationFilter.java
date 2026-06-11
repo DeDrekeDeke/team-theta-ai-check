@@ -19,6 +19,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    public static final String AUTH_ERROR_CODE_ATTRIBUTE = JwtAuthenticationFilter.class.getName() + ".code";
+    public static final String AUTH_ERROR_MESSAGE_ATTRIBUTE = JwtAuthenticationFilter.class.getName() + ".message";
 
     private final JwtService jwtService;
 
@@ -60,6 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (JwtException exception) {
             SecurityContextHolder.clearContext();
+            request.setAttribute(AUTH_ERROR_CODE_ATTRIBUTE, "AUTH_INVALID");
+            request.setAttribute(AUTH_ERROR_MESSAGE_ATTRIBUTE, "Invalid authentication token");
         }
 
         filterChain.doFilter(request, response);

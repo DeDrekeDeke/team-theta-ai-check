@@ -66,6 +66,13 @@ Content-Type: application/json
 }
 ```
 
+Logout:
+
+```http
+POST /api/auth/logout
+Authorization: Bearer <access-token>
+```
+
 CV endpoints:
 
 ```text
@@ -132,3 +139,10 @@ SPRING_DATASOURCE_PASSWORD=cvmanager
 - New users created via `POST /api/users` are stored with BCrypt-hashed passwords.
 - Login verifies the submitted password against the stored hash.
 - User and login responses do not expose plain-text passwords or password hashes.
+
+## Authentication Notes
+
+- The backend uses stateless JWT access tokens with a 15-minute TTL.
+- `POST /api/auth/logout` returns `204 No Content` for an authenticated caller, but it does not revoke issued JWTs server-side.
+- Logout security relies on the frontend discarding its in-memory token and on access-token expiry.
+- This avoids long-lived browser persistence, but a full page reload requires the user to log in again because the frontend does not persist the token.

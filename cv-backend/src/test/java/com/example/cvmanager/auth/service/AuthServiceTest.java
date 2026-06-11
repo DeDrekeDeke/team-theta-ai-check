@@ -2,14 +2,16 @@ package com.example.cvmanager.auth.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.example.cvmanager.admin.service.AdminProperties;
+import com.example.cvmanager.auth.config.AuthProperties;
 import com.example.cvmanager.auth.dto.LoginRequest;
+import com.example.cvmanager.auth.security.JwtService;
 import com.example.cvmanager.common.exception.BadRequestException;
-import com.example.cvmanager.common.security.AsIsSecurityProperties;
 import com.example.cvmanager.user.model.UserAccount;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.Optional;
@@ -30,9 +32,12 @@ class AuthServiceTest {
         passwordEncoder = new BCryptPasswordEncoder();
         authService = new AuthService(
                 userRepository,
-                new AsIsSecurityProperties("demo-token"),
                 new AdminProperties("admin@example.com", "admin123"),
-                passwordEncoder);
+                passwordEncoder,
+                new JwtService(new AuthProperties(
+                        "cv-manager",
+                        "change-this-development-secret-key-to-at-least-32-bytes",
+                        15)));
     }
 
     @Test
@@ -51,6 +56,7 @@ class AuthServiceTest {
         assertEquals("alice@example.com", response.email());
         assertEquals("Alice Student", response.displayName());
         assertFalse(response.admin());
+        assertNotNull(response.token());
     }
 
     @Test
