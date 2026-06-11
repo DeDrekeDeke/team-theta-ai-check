@@ -1,0 +1,8 @@
+ALTER TABLE user_account
+ADD COLUMN role VARCHAR(20);
+
+UPDATE user_account
+SET role = CASE WHEN admin THEN 'ADMIN' ELSE 'USER' END;
+
+ALTER TABLE user_account
+ALTER COLUMN role SET NOT NULL;

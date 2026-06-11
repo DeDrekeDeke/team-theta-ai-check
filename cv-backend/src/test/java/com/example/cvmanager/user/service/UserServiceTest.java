@@ -49,6 +49,7 @@ class UserServiceTest {
 
         assertEquals("carol@example.com", response.email());
         assertEquals("Carol Candidate", response.displayName());
+        assertEquals("USER", response.role());
         assertFalse(response.admin());
         assertFalse(userCaptor.getValue().isAdmin());
         assertNotEquals("carol123", userCaptor.getValue().getPassword());
@@ -83,7 +84,7 @@ class UserServiceTest {
                 "Alice.Updated@example.com",
                 "Alice Updated",
                 "new-password",
-                false));
+                "USER"));
 
         assertEquals("alice.updated@example.com", response.email());
         assertEquals("Alice Updated", response.displayName());
@@ -109,6 +110,6 @@ class UserServiceTest {
                         "admin@example.com",
                         "Admin User",
                         null,
-                        false), 1L));
+                        "USER"), 1L));
     }
 }
