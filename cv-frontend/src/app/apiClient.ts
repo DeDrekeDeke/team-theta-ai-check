@@ -30,7 +30,6 @@ function formatValidationDetail(detail: string) {
 export async function readErrorMessage(response: Response) {
   const fallback = `Request failed with status ${response.status}`;
   const text = await response.text();
-
   if (!text) {
     return fallback;
   }
@@ -69,7 +68,8 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    throw new Error(await readErrorMessage(response));
+    const message = await readErrorMessage(response);
+    throw new Error(message || `Request failed with status ${response.status}`);
   }
 
   if (response.status === 204) {
@@ -78,3 +78,4 @@ export async function apiRequest<T>(
 
   return response.json() as Promise<T>;
 }
+
